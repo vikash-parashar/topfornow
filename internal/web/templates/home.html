@@ -44,10 +44,22 @@
 </section>
 
 <section class="stats">
-  <div><span class="k">Editions so far</span><span class="v">{{$d.TotalRounds}}</span></div>
+  <div><span class="k">Editions</span><span class="v">{{$d.TotalRounds}}</span></div>
   <div><span class="k">Next front page</span><span class="v">{{usd $d.NextPrice}}</span></div>
   {{if $d.Longest}}<div><span class="k">Longest reign</span><span class="v"><a href="/p/{{$d.Longest.Slug}}">{{dur ($d.Longest.TimeOnTop $d.Card.Now)}}</a></span></div>{{end}}
 </section>
+
+<figure class="index">
+  <figcaption><span class="ix-k">Chart of the day</span><span class="ix-t">The Look At Me Index</span><span class="ix-s">What the front page cost, edition by edition. It never goes down.</span></figcaption>
+  <svg viewBox="0 0 320 132" role="img" aria-label="Price per edition, doubling each round. Next: {{if eq $d.NextPrice 0}}free{{else}}{{usd $d.NextPrice}}{{end}}">
+    <line class="ix-base" x1="0" x2="320" y1="112" y2="112"/>
+    {{range lookIndex $d.TotalRounds}}
+    <rect class="ix-bar{{if .Next}} ix-next{{end}}" x="{{.X}}" y="{{.Y}}" width="{{.W}}" height="{{.H}}"/>
+    <text class="ix-v{{if .Next}} ix-vn{{end}}" x="{{.LabelX}}" y="{{.Y}}" dy="-5" text-anchor="middle">{{if eq .Cents 0}}free{{else}}{{usd .Cents}}{{end}}</text>
+    <text class="ix-r" x="{{.LabelX}}" y="126" text-anchor="middle">{{if .Next}}NEXT{{else}}R{{.Round}}{{end}}</text>
+    {{end}}
+  </svg>
+</figure>
 
 {{if $d.History}}
 <section class="past">
@@ -58,5 +70,5 @@
   <p class="more"><a href="/history">Every back issue →</a> <a href="/feed.xml">RSS</a></p>
 </section>
 {{end}}
-{{if not $d.State.OverLimit}}<div class="sticky-cta"><a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight free{{else}}Take it for {{usd $d.NextPrice}}{{end}}</a></div>{{end}}
+{{if not $d.State.OverLimit}}<div class="sticky-cta" data-sticky><a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight free{{else}}Take it for {{usd $d.NextPrice}}{{end}}</a></div>{{end}}
 {{end}}

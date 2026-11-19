@@ -126,15 +126,15 @@ func (c *canvas) zigzag(x0, x1, y, depth int, down bool, col color.Color) {
 // ReceiptInput is everything printed on an Ego Receipt. It deliberately has
 // no payment id and no buyer contact.
 type ReceiptInput struct {
-	PaidCents  int64
-	Round      int
-	Date       time.Time
-	Headline   string
-	Author     string
-	Kind       string
-	PostURL    string
-	Preview    bool
-	OG         bool // 1200x630 social preview; otherwise 1080x1350 download
+	PaidCents int64
+	Round     int
+	Date      time.Time
+	Headline  string
+	Author    string
+	Kind      string
+	PostURL   string
+	Preview   bool
+	OG        bool // 1200x630 social preview; otherwise 1080x1350 download
 }
 
 func renderReceipt(in ReceiptInput) []byte {

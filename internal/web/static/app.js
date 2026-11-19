@@ -49,6 +49,7 @@
       .then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t); }); return r.json(); })
       .then(function (j) {
         box.dataset.mine = j.mine;
+        box.classList.toggle("is-empty", j.up + j.down === 0);
         setCount(box.querySelector(".up .n"), j.up);
         setCount(box.querySelector(".down .n"), j.down);
         box.querySelector(".up").classList.toggle("on", j.mine === 1);
@@ -176,9 +177,20 @@
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
     }, { rootMargin: "0px 0px -6% 0px" });
-    document.querySelectorAll(".fallen .card, .stats > div, .kpi").forEach(function (el, i) {
+    document.querySelectorAll(".fallen .card, .stats > div, .kpi, .index").forEach(function (el, i) {
       el.classList.add("reveal"); el.style.transitionDelay = (i % 3) * 80 + "ms"; io.observe(el);
     });
+  }
+
+  // Sticky buy bar: hidden while the main buy button is already on screen.
+  var sticky = document.querySelector("[data-sticky]");
+  if (sticky && "IntersectionObserver" in window) {
+    var seen = new Set();
+    var so = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) seen.add(en.target); else seen.delete(en.target); });
+      sticky.classList.toggle("away", seen.size > 0);
+    });
+    document.querySelectorAll(".buy .buybtn, .front .headline").forEach(function (el) { so.observe(el); });
   }
 
   // Link hint on the submit form.

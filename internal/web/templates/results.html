@@ -4,6 +4,14 @@
   <p class="eyebrow">Results · round {{deref $p.Round}} · {{if eq $p.PriceCents 0}}founding post{{else}}paid {{usd $p.PriceCents}}{{end}} by {{$p.AuthorName}}</p>
   <h1><a href="/p/{{$p.Slug}}">{{$p.Headline}}</a></h1>
   <p>{{if $p.OnTop}}<span class="pill pill-live">On top now</span>{{else}}Replaced {{date $p.DethronedAt}}{{end}}</p>
+  {{$t := add $r.Up $r.Down}}
+  <div class="verdict">
+    <p class="vd-k">The verdict</p>
+    {{if eq $t 0}}<p class="vd-v">No votes yet</p>
+    {{else}}<p class="vd-v">{{pct $r.Up $r.Down}}% {{upLabel $p.Kind}}</p>
+    <div class="vd-bar" role="img" aria-label="{{$r.Up}} {{upLabel $p.Kind}}, {{$r.Down}} {{downLabel $p.Kind}}"><progress max="{{$t}}" value="{{$r.Up}}"></progress></div>
+    <p class="vd-n"><span>{{$r.Up}} {{upLabel $p.Kind}}</span><span>{{$r.Down}} {{downLabel $p.Kind}}</span></p>{{end}}
+  </div>
   <div class="metrics">
     <div><span class="v">{{dur $r.TimeOnTop}}</span><span class="k">Time on top</span></div>
     <div><span class="v">{{$r.SpotViews}}</span><span class="k">Spotlight views</span></div>

@@ -111,8 +111,18 @@ var funcs = template.FuncMap{
 	"usd":     core.FormatUSD,
 	"dur":     humanDur,
 	"receipt": core.EgoReceiptHeadline,
-	"iso":     func(t *time.Time) string { if t == nil { return "" }; return t.UTC().Format(time.RFC3339) },
-	"date":    func(t *time.Time) string { if t == nil { return "" }; return t.UTC().Format("2 Jan 2006, 15:04 UTC") },
+	"iso": func(t *time.Time) string {
+		if t == nil {
+			return ""
+		}
+		return t.UTC().Format(time.RFC3339)
+	},
+	"date": func(t *time.Time) string {
+		if t == nil {
+			return ""
+		}
+		return t.UTC().Format("2 Jan 2006, 15:04 UTC")
+	},
 	"kindLabel": func(k string) string {
 		switch k {
 		case core.KindOpinion:
@@ -153,9 +163,15 @@ var funcs = template.FuncMap{
 		}
 		return a * 100 / (a + b)
 	},
-	"deref": func(i *int) int { if i == nil { return -1 }; return *i },
-	"ladder": priceLadder,
-	"today":  func() string { return time.Now().UTC().Format("Mon 2 Jan 2006") },
+	"deref": func(i *int) int {
+		if i == nil {
+			return -1
+		}
+		return *i
+	},
+	"ladder":    priceLadder,
+	"lookIndex": indexChart,
+	"today":     func() string { return time.Now().UTC().Format("Mon 2 Jan 2006") },
 	"barH": func(c, max int64) int64 {
 		if max <= 0 || c <= 0 {
 			return 0
@@ -169,10 +185,20 @@ var funcs = template.FuncMap{
 	"barY": func(h int64) int64 { return 90 - h },
 	"barX": func(i int) int { return 6 + i*10 },
 	"neg":  func(c int64) int64 { return -c },
-	"pos":  func(c int64) int64 { if c < 0 { return 0 }; return c },
-	"half":   func(c int64) int64 { return c / 2 },
-	"double": func(c int64) int64 { if c == 0 { return 100 }; return c * 2 },
-	"add":    func(a, b int) int { return a + b },
+	"pos": func(c int64) int64 {
+		if c < 0 {
+			return 0
+		}
+		return c
+	},
+	"half": func(c int64) int64 { return c / 2 },
+	"double": func(c int64) int64 {
+		if c == 0 {
+			return 100
+		}
+		return c * 2
+	},
+	"add": func(a, b int) int { return a + b },
 }
 
 func humanDur(d time.Duration) string {
@@ -488,6 +514,63 @@ func priceLadder(published int) []Rung {
 			st = "next"
 		}
 		out = append(out, Rung{Round: r, Cents: c, State: st})
+	}
+	return out
+}
+
+// IndexBar is one column of the "Look At Me Index" chart on the homepage:
+// the price of each recent front page, with the next one drawn in red.
+// Geometry is precomputed because the CSP forbids inline styles; the SVG
+// uses plain attributes.
+type IndexBar struct {
+	Round      int
+	Cents      int64
+	X, Y, W, H int
+	LabelX     int
+	Next       bool
+}
+
+const indexBase, indexTall, indexWidth = 112, 96, 320
+
+func indexChart(published int) []IndexBar {
+	start := published - 7
+	if start < 0 {
+		start = 0
+	}
+	var rounds []int
+	var cents []int64
+	for r := start; r <= published; r++ {
+		c, err := core.PriceForRound(r)
+		if err != nil {
+			break
+		}
+		rounds = append(rounds, r)
+		cents = append(cents, c)
+	}
+	if len(rounds) == 0 {
+		return nil
+	}
+	max := cents[len(cents)-1]
+	n := len(rounds)
+	if n < 5 {
+		n = 5
+	}
+	slot := indexWidth / n
+	w := slot * 3 / 4
+	if w > 44 {
+		w = 44
+	}
+	out := make([]IndexBar, len(rounds))
+	for i, r := range rounds {
+		h := 2
+		if max > 0 && cents[i] > 0 {
+			h = int(cents[i] * indexTall / max)
+			if h < 3 {
+				h = 3
+			}
+		}
+		x := i*slot + (slot-w)/2
+		out[i] = IndexBar{Round: r, Cents: cents[i], X: x, Y: indexBase - h, W: w, H: h, LabelX: x + w/2, Next: r == published}
 	}
 	return out
 }

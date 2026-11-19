@@ -36,13 +36,14 @@
   <p class="byline">{{if $p.Round}}{{if eq $p.PriceCents 0}}Founding post by <strong>{{$p.AuthorName}}</strong> · free{{else}}Paid placement by <strong>{{$p.AuthorName}}</strong> · paid {{usd $p.PriceCents}}{{end}}{{else}}Will show: paid placement by <strong>{{$p.AuthorName}}</strong>{{end}}</p>
 
   {{if not .Preview}}
-  <div class="votes" data-slug="{{$p.Slug}}" data-mine="{{.MyVote}}">
+  <div class="votes{{if eq (add $p.Up $p.Down) 0}} is-empty{{end}}" data-slug="{{$p.Slug}}" data-mine="{{.MyVote}}">
     <form method="post" action="/vote" class="vote-form">
       <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="slug" value="{{$p.Slug}}">
       <button name="value" value="{{if eq .MyVote 1}}0{{else}}1{{end}}" class="vote up {{if eq .MyVote 1}}on{{end}}" data-v="1">{{upLabel $p.Kind}} <span class="n">{{$p.Up}}</span></button>
       <button name="value" value="{{if eq .MyVote -1}}0{{else}}-1{{end}}" class="vote down {{if eq .MyVote -1}}on{{end}}" data-v="-1">{{downLabel $p.Kind}} <span class="n">{{$p.Down}}</span></button>
     </form>
     <progress class="bar" max="100" value="{{pct $p.Up $p.Down}}" aria-label="{{pct $p.Up $p.Down}}% {{upLabel $p.Kind}}"></progress>
+    <p class="novotes">No votes yet. Yours sets the verdict.</p>
   </div>
   {{end}}
   {{end}}
