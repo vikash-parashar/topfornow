@@ -44,4 +44,5 @@
   <p><a href="/history">See every past top post →</a> · <a href="/feed.xml">Follow changes by RSS</a></p>
 </section>
 {{end}}
+{{if not $d.State.OverLimit}}<div class="sticky-cta"><a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight free{{else}}Take it for {{usd $d.NextPrice}}{{end}}</a></div>{{end}}
 {{end}}

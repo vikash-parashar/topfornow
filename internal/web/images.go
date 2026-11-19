@@ -146,7 +146,7 @@ func renderReceipt(in ReceiptInput) []byte {
 	// spotlight glow
 	for i := 0; i < 18; i++ {
 		a := uint8(10 + i)
-		c.rect(W/2-460+i*25, 0, W/2+460-i*25, 70-i*3, color.RGBA{0xff, 0xb7, 0x03, a})
+		c.rect(W/2-460+i*25, 0, W/2+460-i*25, 70-i*3, color.NRGBA{0xff, 0xb7, 0x03, a})
 	}
 	px0, px1, py0, py1 := 90, W-90, 110, H-110
 	c.rect(px0, py0, px1, py1, colPaper)
@@ -175,15 +175,26 @@ func renderReceipt(in ReceiptInput) []byte {
 	}
 	y += 6
 	c.dashed(inner0, inner1, y, colMuted)
-	y += 62
+	y += 56
+	quote := face("reg", 30)
+	for i, l := range wrap("“"+truncateRunes(in.Headline, 110)+"”", quote, inner1-inner0) {
+		if i == 2 {
+			break
+		}
+		c.text(l, inner0, y, quote, colInk)
+		y += 42
+	}
+	y += 8
+	c.dashed(inner0, inner1, y, colMuted)
+	y += 54
 
-	mono := face("mono", 30)
+	mono := face("mono", 28)
 	item := func(k, v string) {
 		c.text(k, inner0, y, mono, colMuted)
 		c.text(v, inner1-width(v, mono), y, mono, colInk)
-		y += 48
+		y += 44
 	}
-	item("ITEM", "TopForNow spotlight")
+	item("ITEM", "Spotlight placement")
 	item("ROUND", "#"+strconv.Itoa(in.Round))
 	paid := core.FormatUSD(in.PaidCents)
 	if in.PaidCents == 0 {
@@ -192,22 +203,14 @@ func renderReceipt(in ReceiptInput) []byte {
 	item("PAID", paid)
 	item("DATE", strings.ToUpper(in.Date.UTC().Format("02 Jan 2006")))
 	item("BY", truncateRunes(in.Author, 26))
-	y += 6
-	c.dashed(inner0, inner1, y, colMuted)
-	y += 58
-	quote := face("reg", 30)
-	for i, l := range wrap("“"+truncateRunes(in.Headline, 110)+"”", quote, inner1-inner0) {
-		if i == 3 {
-			break
-		}
-		c.text(l, inner0, y, quote, colInk)
-		y += 42
-	}
 
 	// Signature.
 	sig := face("bold", 64)
-	sy := py1 - 120
-	c.dashed(inner0, inner1, sy-80, colMuted)
+	sy := py1 - 90
+	if y+40 > sy-70 {
+		sy = y + 110
+	}
+	c.dashed(inner0, inner1, sy-78, colMuted)
 	sw := width("TopForNow", sig)
 	c.text("TopForNow", W/2-sw/2, sy, sig, colInk)
 	c.rect(W/2+sw/2+8, sy-14, W/2+sw/2+22, sy, colCoral)
@@ -335,7 +338,7 @@ func (s *Server) homeImage(w http.ResponseWriter, r *http.Request) {
 	W, H := 1200, 630
 	c := newCanvas(W, H, colInk)
 	for i := 0; i < 24; i++ {
-		c.rect(W/2-520+i*20, 0, W/2+520-i*20, 300-i*12, color.RGBA{0xff, 0xb7, 0x03, uint8(6 + i)})
+		c.rect(W/2-520+i*20, 0, W/2+520-i*20, 300-i*12, color.NRGBA{0xff, 0xb7, 0x03, uint8(6 + i)})
 	}
 	c.centered("TopForNow", W/2, 250, face("bold", 120), colPaper)
 	c.centered("One public top spot. Read and vote free.", W/2, 340, face("reg", 40), colPaper)
