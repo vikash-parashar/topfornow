@@ -3,7 +3,7 @@
   <h1>Rules</h1>
   <ol>
     <li><strong>One spot.</strong> TopForNow shows one featured post at the top. Everyone sees it first.</li>
-    <li><strong>The founding rule.</strong> The first featured post was free, once. Each later replacement costs double the one before: $1, $2, $4, $8, $16, $32 and so on. The current next price is <strong>{{usd .Data.NextPriceCents}}</strong>.</li>
+    <li><strong>The founding rule.</strong> The first featured post is free, once. Each later replacement costs double the one before: $1, $2, $4, $8, $16, $32 and so on. {{if eq .Data.NextPriceCents 0}}The spot is empty right now, so <strong>the next post is the free one</strong>.{{else}}The current next price is <strong>{{usd .Data.NextPriceCents}}</strong>.{{end}}</li>
     <li><strong>Full price, every time.</strong> Each buyer pays the full displayed price for their replacement. There are no partial top-ups and no discounts.</li>
     <li><strong>How long it lasts.</strong> A post stays on top until another payment successfully replaces it. There is no timer.</li>
     <li><strong>Nothing disappears.</strong> Replaced posts keep their own permanent page with their votes, link, time on top and results.</li>

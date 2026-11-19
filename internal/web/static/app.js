@@ -162,13 +162,13 @@
     if (!calm) {
       cells.forEach(function (it, idx) {
         if (!it[2]) return;
-        var n = 0, stop = 8 + idx * 4;
+        var n = 0, stop = 5 + idx * 3;
         setTimeout(function spin() {
           it[0].classList.remove("turn"); void it[0].offsetWidth; it[0].classList.add("turn");
           if (n++ >= stop) { it[0].textContent = it[1]; return; }
           it[0].textContent = /[A-Z]/.test(it[1]) ? String.fromCharCode(65 + Math.floor(Math.random() * 26)) : String(Math.floor(Math.random() * 10));
           setTimeout(spin, 55);
-        }, 500);
+        }, 200);
       });
     }
   }
