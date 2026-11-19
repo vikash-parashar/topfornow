@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"image"
 	"image/color"
@@ -33,9 +34,23 @@ var (
 )
 
 var (
+	//go:embed cardfonts/Anton-Regular.ttf
+	ttfAnton []byte
+	//go:embed cardfonts/Fraunces72pt-Black.ttf
+	ttfFraunces []byte
+	//go:embed cardfonts/Fraunces72pt-SemiBoldItalic.ttf
+	ttfFrauncesIt []byte
+	//go:embed cardfonts/IBMPlexMono-Regular.ttf
+	ttfPlex []byte
+	//go:embed cardfonts/IBMPlexMono-SemiBold.ttf
+	ttfPlexB []byte
+)
+
+var (
 	faceMu    sync.Mutex
 	faceCache = map[string]font.Face{}
-	fontData  = map[string][]byte{"bold": gobold.TTF, "reg": goregular.TTF, "mono": gomono.TTF, "monob": gomonobold.TTF}
+	fontData  = map[string][]byte{"bold": gobold.TTF, "reg": goregular.TTF, "mono": gomono.TTF, "monob": gomonobold.TTF,
+		"anton": ttfAnton, "fraunces": ttfFraunces, "frauncesIt": ttfFrauncesIt, "plex": ttfPlex, "plexb": ttfPlexB}
 )
 
 func face(name string, size float64) font.Face {
@@ -137,84 +152,197 @@ type ReceiptInput struct {
 	OG        bool // 1200x630 social preview; otherwise 1080x1350 download
 }
 
+// Ego Receipt, "Extra Edition" style: a newspaper clipping torn out of the
+// TopForNow front page, taped onto ink, with the buyer's line highlighted
+// and a red PAID stamp.
+var (
+	colNews  = color.RGBA{0xef, 0xe9, 0xdc, 0xff}
+	colInk2  = color.RGBA{0x3a, 0x37, 0x32, 0xff}
+	colTape  = color.NRGBA{0xff, 0xe1, 0x4a, 0xb8}
+	colHiLit = color.RGBA{0xff, 0xe1, 0x4a, 0xff}
+)
+
+// rnd is a tiny deterministic generator so the same receipt always renders
+// the same torn edge and paper grain.
+type rnd uint32
+
+func (r *rnd) next(n int) int {
+	*r = *r*1664525 + 1013904223
+	return int(uint32(*r)>>8) % n
+}
+
+// clipping draws newsprint with torn edges and a light grain.
+func (c *canvas) clipping(x0, y0, x1, y1 int, seed uint32) {
+	r := rnd(seed)
+	c.rect(x0+10, y0+10, x1-10, y1-10, colNews)
+	for x := x0 + 10; x < x1-10; x += 5 {
+		c.rect(x, y0+10-r.next(10), x+5, y0+10, colNews)
+		c.rect(x, y1-10, x+5, y1-10+r.next(10), colNews)
+	}
+	for y := y0 + 10; y < y1-10; y += 5 {
+		c.rect(x0+10-r.next(10), y, x0+10, y+5, colNews)
+		c.rect(x1-10, y, x1-10+r.next(10), y+5, colNews)
+	}
+	grain := color.NRGBA{0x12, 0x11, 0x10, 0x16}
+	n := (x1 - x0) * (y1 - y0) / 260
+	for i := 0; i < n; i++ {
+		x, y := x0+12+r.next(x1-x0-24), y0+12+r.next(y1-y0-24)
+		c.rect(x, y, x+2, y+2, grain)
+	}
+}
+
+func (c *canvas) border(x0, y0, x1, y1, t int, col color.Color) {
+	c.rect(x0, y0, x1, y0+t, col)
+	c.rect(x0, y1-t, x1, y1, col)
+	c.rect(x0, y0, x0+t, y1, col)
+	c.rect(x1-t, y0, x1, y1, col)
+}
+
+func (c *canvas) doubleRule(x0, x1, y int) {
+	c.rect(x0, y, x1, y+4, colInk)
+	c.rect(x0, y+9, x1, y+11, colInk)
+}
+
+func (c *canvas) dotted(x0, x1, y int, col color.Color) {
+	for x := x0; x < x1; x += 8 {
+		c.rect(x, y, x+3, y+3, col)
+	}
+}
+
+// fitFace returns the largest size of the named face at which s fits in w.
+func fitFace(name, s string, w int, maxSize float64) font.Face {
+	for size := maxSize; size > 10; size -= 2 {
+		if f := face(name, size); width(s, f) <= w {
+			return f
+		}
+	}
+	return face(name, 10)
+}
+
+// highlighted draws wrapped lines with a yellow marker stroke under the
+// lower half of each line, as on the homepage headline.
+func (c *canvas) highlighted(lines []string, x, y int, f font.Face, size, lead float64) int {
+	for _, l := range lines {
+		w := width(l, f)
+		c.rect(x-6, y-int(size*0.42), x+w+8, y+int(size*0.10), colHiLit)
+		c.text(l, x, y, f, colInk)
+		y += int(size * lead)
+	}
+	return y
+}
+
+// stamp draws the red PAID / FREE stamp: a double red border, a kicker and the amount.
+func (c *canvas) stamp(x0, y0, x1, y1 int, kicker, amount string) {
+	c.border(x0, y0, x1, y1, 5, colCoral)
+	c.border(x0+11, y0+11, x1-11, y1-11, 2, colCoral)
+	h := y1 - y0
+	k := face("plexb", float64(h/9))
+	c.centered(kicker, (x0+x1)/2, y0+h*28/100, k, colCoral)
+	a := fitFace("anton", amount, x1-x0-50, float64(h)*0.44)
+	c.centered(amount, (x0+x1)/2, y1-h*15/100, a, colCoral)
+}
+
+func receiptBits(in ReceiptInput) (headline, paid, stampKick, stampAmt, date, url string) {
+	headline = core.EgoReceiptHeadline(in.PaidCents)
+	paid = core.FormatUSD(in.PaidCents)
+	stampKick, stampAmt = "PAID", paid
+	if in.PaidCents == 0 {
+		paid, stampKick, stampAmt = "$0, founding post", "FIRST", "FREE"
+	}
+	date = strings.ToUpper(in.Date.UTC().Format("Mon 2 Jan 2006"))
+	url = strings.TrimPrefix(strings.TrimPrefix(in.PostURL, "https://"), "http://")
+	return
+}
+
 func renderReceipt(in ReceiptInput) []byte {
 	if in.OG {
 		return renderReceiptOG(in)
 	}
 	W, H := 1080, 1350
 	c := newCanvas(W, H, colInk)
-	// spotlight glow
-	for i := 0; i < 18; i++ {
-		a := uint8(10 + i)
-		c.rect(W/2-460+i*25, 0, W/2+460-i*25, 70-i*3, color.NRGBA{0xe2, 0x23, 0x1a, a / 3})
-	}
-	px0, px1, py0, py1 := 90, W-90, 110, H-110
-	c.rect(px0, py0, px1, py1, colPaper)
-	c.zigzag(px0, px1, py0, 12, false, colPaper)
-	c.zigzag(px0, px1, py1, 12, true, colPaper)
-	inner0, inner1 := px0+60, px1-60
+	headline, paid, sk, sa, date, url := receiptBits(in)
+	px0, py0, px1, py1 := 64, 96, W-64, H-80
+	c.clipping(px0, py0, px1, py1, uint32(in.Round*7919+len(in.Headline)))
+	c.rect(W/2-120, py0-26, W/2+120, py0+40, colTape)
+	x0, x1 := px0+58, px1-58
 
-	y := py0 + 90
-	c.centered("E G O   R E C E I P T", W/2, y, face("monob", 46), colInk)
-	y += 44
-	c.centered("spotlight placement · proof of attention", W/2, y, face("mono", 24), colMuted)
-	y += 40
-	c.dashed(inner0, inner1, y, colMuted)
+	y := py0 + 74
+	mono := face("plex", 22)
+	c.text("VOL. I  ·  NO. "+strconv.Itoa(in.Round), x0, y, mono, colInk)
+	c.text(date, x1-width(date, mono), y, mono, colInk)
+	c.rect(x0, y+14, x1, y+16, colInk)
+	mast := fitFace("anton", "TOPFORNOW", x1-x0, 160)
+	y += 16 + int(float64(mast.Metrics().Ascent.Round())*0.97)
+	c.centered("TOPFORNOW", W/2, y, mast, colInk)
+	y += 20
+	c.doubleRule(x0, x1, y)
+	y += 46
+	it := face("frauncesIt", 25)
+	c.text("One spot on the internet.", x0, y, it, colInk)
+	m := "Every front page costs double."
+	c.text(m, x1-width(m, it), y, it, colInk)
+	y += 18
+	c.rect(x0, y, x1, y+2, colInk)
 
-	// The sentence: largest text on the card.
-	big := face("bold", 84)
-	lines := wrap(core.EgoReceiptHeadline(in.PaidCents), big, inner1-inner0)
-	if len(lines) > 4 {
-		big = face("bold", 70)
-		lines = wrap(core.EgoReceiptHeadline(in.PaidCents), big, inner1-inner0)
+	y += 62
+	c.text("EGO RECEIPT  ·  PAID PLACEMENT  ·  EDITION "+strconv.Itoa(in.Round), x0, y, face("plexb", 22), colCoral)
+
+	q := face("frauncesIt", 31)
+	quote := wrap("“"+truncateRunes(in.Headline, 110)+"”", q, x1-x0)
+	if len(quote) > 2 {
+		quote = quote[:2]
 	}
-	y += 110
-	for _, l := range lines {
-		c.text(l, inner0, y, big, colInk)
-		y += 96
-	}
-	y += 6
-	c.dashed(inner0, inner1, y, colMuted)
-	y += 56
-	quote := face("reg", 30)
-	for i, l := range wrap("“"+truncateRunes(in.Headline, 110)+"”", quote, inner1-inner0) {
-		if i == 2 {
+	// Everything below the headline has a fixed height; the headline takes
+	// the largest size that leaves room for it.
+	below := 4 + 52 + len(quote)*40 + 2 + 40 + 214 + 104
+	size := 100.0
+	var big font.Face
+	var lines []string
+	for ; size >= 56; size -= 4 {
+		big = face("fraunces", size)
+		lines = wrap(headline, big, x1-x0-10)
+		if y+int(size)+12+int(float64(len(lines))*size*1.04)-int(size*0.5)+below <= py1 {
 			break
 		}
-		c.text(l, inner0, y, quote, colInk)
-		y += 42
 	}
-	y += 8
-	c.dashed(inner0, inner1, y, colMuted)
-	y += 54
+	y += int(size) + 12
+	y = c.highlighted(lines, x0, y, big, size, 1.04) - int(size*0.5)
 
-	mono := face("mono", 28)
-	item := func(k, v string) {
-		c.text(k, inner0, y, mono, colMuted)
-		c.text(v, inner1-width(v, mono), y, mono, colInk)
-		y += 44
+	y += 4
+	c.dotted(x0, x1, y, colInk)
+	y += 52
+	for _, l := range quote {
+		c.text(l, x0, y, q, colInk)
+		y += 40
 	}
-	item("ITEM", "Spotlight placement")
-	item("ROUND", "#"+strconv.Itoa(in.Round))
-	paid := core.FormatUSD(in.PaidCents)
-	if in.PaidCents == 0 {
-		paid = "$0 (founding post)"
-	}
-	item("PAID", paid)
-	item("DATE", strings.ToUpper(in.Date.UTC().Format("02 Jan 2006")))
-	item("BY", truncateRunes(in.Author, 26))
+	c.text("BY "+strings.ToUpper(truncateRunes(in.Author, 28)), x0, y+2, face("plexb", 22), colInk2)
 
-	// Signature.
-	sig := face("bold", 64)
-	sy := py1 - 90
-	if y+40 > sy-70 {
-		sy = y + 110
+	// Receipt box with a hard shadow, and the stamp beside it.
+	by0 := y + 40
+	by1 := by0 + 214
+	bx1 := x0 + 520
+	c.rect(x0+9, by0+9, bx1+9, by1+9, colInk)
+	c.rect(x0, by0, bx1, by1, colNews)
+	c.border(x0, by0, bx1, by1, 3, colInk)
+	row := face("plex", 24)
+	rowb := face("plexb", 24)
+	ry := by0 + 48
+	for _, kv := range [][2]string{{"ITEM", "The front page"}, {"ROUND", "#" + strconv.Itoa(in.Round)}, {"PAID", paid}, {"BY", truncateRunes(in.Author, 18)}} {
+		c.text(kv[0], x0+24, ry, row, colInk2)
+		c.text(kv[1], bx1-24-width(kv[1], rowb), ry, rowb, colInk)
+		ry += 46
 	}
-	c.dashed(inner0, inner1, sy-78, colMuted)
-	sw := width("TopForNow", sig)
-	c.text("TopForNow", W/2-sw/2, sy, sig, colInk)
-	c.rect(W/2+sw/2+8, sy-14, W/2+sw/2+22, sy, colCoral)
-	c.centered(strings.TrimPrefix(strings.TrimPrefix(in.PostURL, "https://"), "http://"), W/2, sy+46, face("mono", 24), colMuted)
+	c.stamp(bx1+52, by0+8, x1, by1-8, sk, sa)
+
+	fy := py1 - 64
+	c.rect(x0, fy-38, x1, fy-36, colInk)
+	foot := face("plex", 22)
+	c.text(url, x0, fy, foot, colInk2)
+	if t := "Read it. Vote free. Or take the spot."; width(url, foot)+width(t, foot)+40 <= x1-x0 {
+		c.text(t, x1-width(t, foot), fy, foot, colInk2)
+	} else if t := "Vote free."; width(url, foot)+width(t, foot)+40 <= x1-x0 {
+		c.text(t, x1-width(t, foot), fy, foot, colInk2)
+	}
 
 	if in.Preview {
 		previewStamp(c, W, H)
@@ -225,38 +353,42 @@ func renderReceipt(in ReceiptInput) []byte {
 func renderReceiptOG(in ReceiptInput) []byte {
 	W, H := 1200, 630
 	c := newCanvas(W, H, colInk)
-	px0, px1, py0, py1 := 60, W-60, 50, H-50
-	c.rect(px0, py0, px1, py1, colPaper)
-	c.zigzag(px0, px1, py0, 10, false, colPaper)
-	c.zigzag(px0, px1, py1, 10, true, colPaper)
-	x0, x1 := px0+50, px1-50
-	y := py0 + 62
-	c.text("E G O   R E C E I P T", x0, y, face("monob", 34), colInk)
-	r := "ROUND #" + strconv.Itoa(in.Round) + " · " + strings.ToUpper(in.Date.UTC().Format("02 Jan 2006"))
-	c.text(r, x1-width(r, face("mono", 24)), y-4, face("mono", 24), colMuted)
-	y += 26
-	c.dashed(x0, x1, y, colMuted)
-	big := face("bold", 66)
-	lines := wrap(core.EgoReceiptHeadline(in.PaidCents), big, x1-x0)
-	if len(lines) > 3 {
-		big = face("bold", 54)
-		lines = wrap(core.EgoReceiptHeadline(in.PaidCents), big, x1-x0)
+	headline, _, sk, sa, date, url := receiptBits(in)
+	px0, py0, px1, py1 := 34, 34, W-34, H-34
+	c.clipping(px0, py0, px1, py1, uint32(in.Round*104729+len(in.Headline)))
+	x0, x1 := px0+46, px1-46
+
+	y := py0 + 54
+	mono := face("plex", 19)
+	mast := face("anton", 58)
+	c.text("TOPFORNOW", x0, y+18, mast, colInk)
+	r := "EGO RECEIPT · EDITION " + strconv.Itoa(in.Round) + " · " + date
+	c.text(r, x1-width(r, mono), y+12, face("plexb", 19), colCoral)
+	y += 34
+	c.doubleRule(x0, x1, y)
+
+	colW := x1 - x0 - 300
+	size := 70.0
+	big := face("fraunces", size)
+	lines := wrap(headline, big, colW)
+	for len(lines) > 3 && size > 46 {
+		size -= 6
+		big = face("fraunces", size)
+		lines = wrap(headline, big, colW)
 	}
-	y += 88
-	for _, l := range lines {
-		c.text(l, x0, y, big, colInk)
-		y += 78
+	y += 20 + int(size)
+	y = c.highlighted(lines, x0, y, big, size, 1.06)
+	q := face("frauncesIt", 26)
+	if l := wrap("“"+truncateRunes(in.Headline, 80)+"” by "+truncateRunes(in.Author, 24), q, colW); len(l) > 0 {
+		c.text(l[0], x0, y+6, q, colInk2)
 	}
-	quote := face("reg", 26)
-	if l := wrap("“"+truncateRunes(in.Headline, 80)+"” by "+truncateRunes(in.Author, 24), quote, x1-x0); len(l) > 0 {
-		c.text(l[0], x0, y+4, quote, colMuted)
-	}
-	sig := face("bold", 50)
-	sy := py1 - 40
-	c.dashed(x0, x1, sy-66, colMuted)
-	c.text("TopForNow", x1-width("TopForNow", sig)-20, sy, sig, colInk)
-	c.rect(x1-16, sy-12, x1-4, sy, colCoral)
-	c.text("Read it. Vote free. Or take the spot.", x0, sy-6, face("mono", 24), colMuted)
+	c.stamp(x1-250, py0+150, x1, py0+400, sk, sa)
+
+	fy := py1 - 40
+	c.rect(x0, fy-32, x1, fy-30, colInk)
+	c.text(url, x0, fy, mono, colInk2)
+	t := "Read it. Vote free. Or take the spot."
+	c.text(t, x1-width(t, mono), fy, mono, colInk2)
 	if in.Preview {
 		previewStamp(c, W, H)
 	}
