@@ -112,6 +112,7 @@ type submitData struct {
 
 func (s *Server) submitForm(w http.ResponseWriter, r *http.Request) {
 	st, _ := s.Svc.GetState(r.Context())
+	s.Svc.Track(r.Context(), core.EvVisit, visitorFrom(r), 0, s.source(w, r), r.URL.Path, isBot(r))
 	d := submitData{Kind: r.URL.Query().Get("kind"), Price: st.NextPriceCents, Founding: st.NextRound == 0}
 	if d.Kind == "" {
 		d.Kind = core.KindOpinion
