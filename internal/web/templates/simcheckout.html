@@ -1,0 +1,23 @@
+{{define "content"}}
+{{$s := .Data}}
+<section class="panel sim">
+  <p class="sim-banner">SANDBOX CHECKOUT · simulated · no card, no real money</p>
+  <h1>{{$s.Meta.description}}</h1>
+  <p class="price big">{{usd $s.AmountCents}} USD</p>
+  <p class="muted">This page stands in for Dodo Payments' hosted checkout. Each button sends a signed webhook to TopForNow's real webhook endpoint, exactly like the provider would.</p>
+  {{if eq $s.Status "paid"}}<p class="ok">This sandbox session is already paid.</p>{{else}}
+  <form method="post" class="simform">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button class="btn buybtn" name="action" value="pay">Pay {{usd $s.AmountCents}} (succeeds)</button>
+    <button class="btn ghost" name="action" value="decline">Card declined</button>
+    <button class="btn ghost" name="action" value="close" formnovalidate>Close checkout</button>
+    <details><summary>Test options</summary>
+      <label>Deliver webhook <select name="deliveries"><option value="1">once</option><option value="2">twice (duplicate)</option></select></label>
+      <label>Webhook delay (seconds) <input name="delay" type="number" min="0" max="60" value="0"></label>
+      <label class="check"><input type="checkbox" name="skip_return_verify" value="1"> Browser closed (no return verification)</label>
+      <button class="btn ghost" name="action" value="pay_async">Pay with async method (processing → succeeded)</button>
+    </details>
+  </form>
+  {{end}}
+</section>
+{{end}}

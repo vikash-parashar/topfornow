@@ -1,0 +1,7 @@
+{{define "content"}}
+<section class="panel">
+  <h1>Someone is checking out right now</h1>
+  <p>Another buyer is paying {{usd .Data.Price}} for this round. Their hold ends <time data-until="{{.Data.Until.UTC.Format "2006-01-02T15:04:05Z07:00"}}">soon</time>. If they don't finish, you can go next at the same price. If they do, the price doubles. Nothing was charged.</p>
+  <p><a class="btn ghost" href="/draft/{{.Data.Token}}">Back to my post</a></p>
+</section>
+{{end}}

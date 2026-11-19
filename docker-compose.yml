@@ -1,0 +1,27 @@
+# Local run: docker compose up --build, then open http://localhost:8080
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: topfornow
+      POSTGRES_PASSWORD: topfornow
+      POSTGRES_DB: topfornow
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "topfornow"]
+      interval: 2s
+      retries: 20
+  app:
+    build: .
+    depends_on:
+      db: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgres://topfornow:topfornow@db:5432/topfornow?sslmode=disable
+      APP_SECRET: local-dev-secret-local-dev-secret-123
+      ADMIN_PASSWORD: admin
+      BASE_URL: http://localhost:8080
+      PAYMENT_MODE: sandbox
+    ports: ["8080:8080"]
+volumes:
+  pgdata:

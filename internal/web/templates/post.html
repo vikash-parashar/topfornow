@@ -1,0 +1,33 @@
+{{define "content"}}
+{{$d := .Data}}{{$p := $d.Card.P}}
+<section class="stage">
+  {{if not $p.OnTop}}
+  <p class="replaced">This post was on top for <strong>{{dur ($p.TimeOnTop $d.Card.Now)}}</strong>{{if $p.DethronedAt}} until {{date $p.DethronedAt}}{{end}}. {{if $d.State.Current}}<a href="/">See what's on top now →</a>{{end}}</p>
+  {{end}}
+  {{template "card" $d.Card}}
+  {{if ne $p.Status "removed"}}
+  <div class="actions">
+    <button type="button" class="btn ghost share" data-url="{{$d.ShareURL}}" data-text="{{$d.ShareText}}" data-slug="{{$p.Slug}}">Share</button>
+    <a class="btn ghost" href="/submit?reply_to={{$p.Slug}}">Respond with your own post</a>
+    <a class="btn ghost" href="/p/{{$p.Slug}}/results">Results</a>
+  </div>
+  {{end}}
+</section>
+{{if $d.Replies}}
+<section class="panel"><h2>Responses that took the spotlight</h2><ul>{{range $d.Replies}}<li><a href="/p/{{.Slug}}">“{{.Headline}}”</a></li>{{end}}</ul></section>
+{{end}}
+<section class="buy">
+  {{if $d.State.OverLimit}}<p class="price-note">Online checkout is closed this round (above processor limit).</p>
+  {{else}}<a class="btn buybtn" href="/submit?reply_to={{$p.Slug}}">Take the spotlight for {{usd $d.State.NextPriceCents}}</a>{{end}}
+  {{template "rulesbox" false}}
+</section>
+{{if ne $p.Status "removed"}}
+<details class="report"><summary>Report this post</summary>
+  <form method="post" action="/p/{{$p.Slug}}/report">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <select name="reason" aria-label="Reason"><option value="spam">Spam</option><option value="scam">Scam or fraud</option><option value="hate">Hate or harassment</option><option value="sexual">Sexual content</option><option value="violence">Violence</option><option value="illegal">Illegal</option><option value="other">Other</option></select>
+    <button class="btn ghost small">Send report</button>
+  </form>
+</details>
+{{end}}
+{{end}}

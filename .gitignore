@@ -1,0 +1,7 @@
+/bin/
+/topfornow
+*.env
+.env*
+!.env.example
+/tmp/
+/screenshots/tmp/

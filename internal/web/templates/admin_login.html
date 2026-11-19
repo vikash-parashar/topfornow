@@ -1,0 +1,11 @@
+{{define "content"}}
+<section class="panel narrow">
+  <h1>Owner sign in</h1>
+  {{if .Data}}<p class="error">{{.Data}}</p>{{end}}
+  <form method="post" action="/admin/login" class="form">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+    <button class="btn buybtn">Sign in</button>
+  </form>
+</section>
+{{end}}

@@ -1,0 +1,27 @@
+{{define "content"}}
+{{$p := .Data.P}}{{$r := .Data.R}}
+<section class="panel">
+  <p class="eyebrow">Results · round {{deref $p.Round}} · {{if eq $p.PriceCents 0}}founding post{{else}}paid {{usd $p.PriceCents}}{{end}} by {{$p.AuthorName}}</p>
+  <h1><a href="/p/{{$p.Slug}}">{{$p.Headline}}</a></h1>
+  <p>{{if $p.OnTop}}<span class="pill pill-live">On top now</span>{{else}}Replaced {{date $p.DethronedAt}}{{end}}</p>
+  <div class="metrics">
+    <div><span class="v">{{dur $r.TimeOnTop}}</span><span class="k">Time on top</span></div>
+    <div><span class="v">{{$r.SpotViews}}</span><span class="k">Spotlight views</span></div>
+    <div><span class="v">{{$r.PostViews}}</span><span class="k">Post page views</span></div>
+    <div><span class="v">{{$r.OutboundClick}}</span><span class="k">People who clicked the link</span></div>
+    {{if eq $p.EmbedProvider "youtube"}}<div><span class="v">{{$r.VideoPlays}}</span><span class="k">Video plays started</span></div>{{end}}
+    <div><span class="v">{{$r.Up}} / {{$r.Down}}</span><span class="k">{{upLabel $p.Kind}} / {{downLabel $p.Kind}}</span></div>
+    <div><span class="v">{{$r.Replies}}</span><span class="k">Paid responses</span></div>
+  </div>
+  <h2>How these are counted</h2>
+  <ul class="small">
+    <li><strong>Spotlight views</strong>: unique browsers per hour that loaded the homepage while this post was on top. Known bots and headless browsers are excluded.</li>
+    <li><strong>Post page views</strong>: unique browsers per hour on this post's own page, before and after it was replaced.</li>
+    <li><strong>Clicks</strong>: unique browsers that tapped the link through our redirect ({{$r.ClicksTotal}} taps in total). A click is not a signup or a sale.</li>
+    {{if eq $p.EmbedProvider "youtube"}}<li><strong>Video plays started</strong>: the YouTube player on our page reported playback. YouTube's own view count uses different rules.</li>{{end}}
+    {{if eq $p.EmbedProvider "instagram"}}<li>Instagram does not tell us when an embedded post is viewed, so we report only clicks.</li>{{end}}
+    <li>We cannot see signups or sales. Product links carry <span class="mono">utm_source=topfornow&amp;utm_medium=spotlight</span> so you can see them in your own analytics.</li>
+  </ul>
+  <p><a class="btn ghost" href="/p/{{$p.Slug}}">Back to the post</a> <a class="btn ghost" href="/">What's on top now</a></p>
+</section>
+{{end}}

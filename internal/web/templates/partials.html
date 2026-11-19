@@ -1,0 +1,64 @@
+{{define "card"}}
+{{$p := .P}}
+<article class="card {{if .Big}}card-big{{end}} kind-{{$p.Kind}} {{if eq $p.Status "removed"}}is-removed{{end}}" id="post-{{$p.Slug}}">
+  <div class="card-meta">
+    <span class="pill pill-{{$p.Kind}}">{{kindLabel $p.Kind}}</span>
+    {{if $p.Round}}
+      {{if $p.OnTop}}<span class="pill pill-live">On top now</span>{{else if eq $p.Status "removed"}}<span class="pill">Removed</span>{{else}}<span class="pill">Round {{deref $p.Round}}</span>{{end}}
+    {{else if .Preview}}<span class="pill pill-preview">Preview</span>{{end}}
+    {{if $p.PublishedAt}}<span class="ontop" title="Time on top">⏱ <span {{if $p.OnTop}}data-since="{{iso $p.PublishedAt}}"{{end}}>{{dur ($p.TimeOnTop .Now)}}</span> on top</span>{{end}}
+  </div>
+  {{if eq $p.Status "removed"}}
+    <p class="headline">This post was removed by a moderator.</p>
+    <p class="muted">It broke the rules. The round still counts and the price does not go back down.</p>
+  {{else}}
+  {{if $p.ReplyTo}}<p class="replyto">Responding to <a href="/p/{{$p.ReplyTo.Slug}}">“{{$p.ReplyTo.Headline}}”</a></p>{{end}}
+  <h2 class="headline">{{if eq $p.Kind "opinion"}}“{{$p.Headline}}”{{else}}{{$p.Headline}}{{end}}</h2>
+  {{if $p.Body}}<p class="body">{{$p.Body}}</p>{{end}}
+
+  {{if eq $p.EmbedProvider "youtube"}}
+    <div class="embed embed-yt" data-yt="{{$p.EmbedRef}}" data-slug="{{$p.Slug}}">
+      <button type="button" class="yt-load" aria-label="Play video">
+        <img src="https://i.ytimg.com/vi/{{$p.EmbedRef}}/hqdefault.jpg" alt="Video thumbnail" loading="lazy" width="480" height="360">
+        <span class="play" aria-hidden="true">▶</span>
+      </button>
+    </div>
+    <p class="embed-fallback">Video not playing here? <a href="{{if .Preview}}{{$p.LinkURL}}{{else}}/go/{{$p.Slug}}{{end}}" rel="sponsored noopener" target="_blank">Watch on YouTube ↗</a></p>
+  {{else if eq $p.EmbedProvider "instagram"}}
+    <div class="embed embed-ig"><iframe src="https://www.instagram.com/{{$p.EmbedRef}}/embed/" title="Instagram post" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups"></iframe></div>
+    <p class="embed-fallback">Instagram blocks some embeds. <a href="{{if .Preview}}{{$p.LinkURL}}{{else}}/go/{{$p.Slug}}{{end}}" rel="sponsored noopener" target="_blank">Open on Instagram ↗</a></p>
+  {{else if $p.LinkURL}}
+    <a class="linkcard" href="{{if .Preview}}{{$p.LinkURL}}{{else}}/go/{{$p.Slug}}{{end}}" rel="sponsored noopener" target="_blank">
+      <span class="lc-host">{{$p.LinkHost}}</span><span class="lc-cta">Visit ↗</span>
+    </a>
+  {{end}}
+
+  <p class="byline">{{if $p.Round}}{{if eq $p.PriceCents 0}}Founding post by <strong>{{$p.AuthorName}}</strong> · free{{else}}Paid placement by <strong>{{$p.AuthorName}}</strong> · paid {{usd $p.PriceCents}}{{end}}{{else}}Will show: paid placement by <strong>{{$p.AuthorName}}</strong>{{end}}</p>
+
+  {{if not .Preview}}
+  <div class="votes" data-slug="{{$p.Slug}}" data-mine="{{.MyVote}}">
+    <form method="post" action="/vote" class="vote-form">
+      <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="slug" value="{{$p.Slug}}">
+      <button name="value" value="{{if eq .MyVote 1}}0{{else}}1{{end}}" class="vote up {{if eq .MyVote 1}}on{{end}}" data-v="1">{{upLabel $p.Kind}} <span class="n">{{$p.Up}}</span></button>
+      <button name="value" value="{{if eq .MyVote -1}}0{{else}}-1{{end}}" class="vote down {{if eq .MyVote -1}}on{{end}}" data-v="-1">{{downLabel $p.Kind}} <span class="n">{{$p.Down}}</span></button>
+    </form>
+    <progress class="bar" max="100" value="{{pct $p.Up $p.Down}}" aria-label="{{pct $p.Up $p.Down}}% {{upLabel $p.Kind}}"></progress>
+  </div>
+  {{end}}
+  {{end}}
+  {{if and (not .Preview) (not .Big)}}<p class="card-links"><a href="/p/{{$p.Slug}}">Open</a> · <a href="/p/{{$p.Slug}}/results">Results</a></p>{{end}}
+</article>
+{{end}}
+
+{{define "rulesbox"}}
+<details class="rulesbox" {{if .}}open{{end}}>
+  <summary>How it works (30 seconds)</summary>
+  <ol>
+    <li>There is <strong>one</strong> spot. Whatever is in it, everyone sees first.</li>
+    <li>The very first post was free. After that, replacing the post costs <strong>$1, then $2, $4, $8, $16…</strong> Each replacement doubles.</li>
+    <li>The buyer pays the full price shown. Their post stays on top until someone else pays the next price. No timer.</li>
+    <li>Voting is <strong>free</strong> and never changes who is on top. Votes stay with the post forever.</li>
+    <li>Replaced posts keep their own page, votes, link and results. Nothing is deleted.</li>
+  </ol>
+</details>
+{{end}}

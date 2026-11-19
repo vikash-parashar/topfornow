@@ -1,0 +1,67 @@
+{{define "content"}}
+{{$d := .Data}}{{$p := $d.Post}}
+<section class="panel">
+{{if $p.Round}}
+  <h1>{{if eq $p.PriceCents 0}}You took the first spotlight.{{else}}You're on top.{{end}}</h1>
+  {{if eq $d.Notice "paid"}}<p class="ok">Payment confirmed by the payment provider. Your post was published as round {{deref $p.Round}}.</p>{{end}}
+  {{template "card" $d.Card}}
+  <div class="receipt-box">
+    {{if gt $p.PriceCents 0}}
+      <h2>Your Ego Receipt</h2>
+      <img class="receipt-img" src="/receipt/{{$p.Slug}}" alt="Ego Receipt: {{receipt $p.PriceCents}} Signed TopForNow." width="1080" height="1350">
+      <div class="actions">
+        <button type="button" class="btn buybtn share-receipt" data-url="{{$d.ShareURL}}" data-text="{{$d.ShareText}}" data-img="/receipt/{{$p.Slug}}" data-slug="{{$p.Slug}}">Share my Ego Receipt</button>
+        <a class="btn ghost" href="/receipt/{{$p.Slug}}?dl=1" download>Download image</a>
+        <button type="button" class="btn ghost copy" data-url="{{$d.ShareURL}}" data-slug="{{$p.Slug}}">Copy link</button>
+      </div>
+    {{else}}
+      <h2>Share it</h2>
+      <p class="share-preview">“I took the first spotlight for free.”</p>
+      <div class="actions">
+        <button type="button" class="btn buybtn share" data-url="{{$d.ShareURL}}" data-text="I took the first spotlight for free." data-slug="{{$p.Slug}}">Share</button>
+        <button type="button" class="btn ghost copy" data-url="{{$d.ShareURL}}" data-slug="{{$p.Slug}}">Copy link</button>
+      </div>
+    {{end}}
+    <p class="muted">Your permanent link: <a href="/p/{{$p.Slug}}">{{.BaseURL}}/p/{{$p.Slug}}</a>. It keeps working after someone replaces you, with your votes and results, and points readers to whoever is on top now.</p>
+    <p><a class="btn ghost" href="/p/{{$p.Slug}}/results">See your results page</a></p>
+    <p class="muted small">Keep this private page bookmarked. It is your owner view of the post.</p>
+  </div>
+{{else if eq $p.Status "needs_review"}}
+  <h1>Waiting for a quick review</h1>
+  <p>Something in your post needs a human look before it can be paid for ({{$p.ReviewNotes}}). Nothing has been charged. Bookmark this page and come back; once approved, the button to publish appears here.</p>
+  {{template "card" $d.Card}}
+{{else if eq $p.Status "rejected"}}
+  <h1>This post was not approved</h1>
+  <p>{{if $p.ReviewNotes}}{{$p.ReviewNotes}}{{else}}It breaks the rules.{{end}} Nothing was charged. You can <a href="/submit">write a new one</a>.</p>
+{{else}}
+  <h1>Check your post</h1>
+  {{if eq $d.Notice "cancelled"}}<p class="muted">Checkout cancelled. Nothing was charged.</p>{{end}}
+  {{if eq $d.Notice "review"}}<p class="muted">This post is waiting for review.</p>{{end}}
+  <p class="muted">This is exactly how it will look on top:</p>
+  {{template "card" $d.Card}}
+  <dl class="facts">
+    {{if $p.LinkURL}}<dt>Link people will visit</dt><dd class="mono">{{$p.LinkURL}}</dd>{{end}}
+    <dt>Price</dt><dd><strong class="price">{{if eq $d.Price 0}}Free (founding post, once){{else}}{{usd $d.Price}} USD{{end}}</strong>{{if gt $d.Price 0}}, the full price for this replacement, charged once by our payment provider (Dodo Payments) as a "TopForNow spotlight placement".{{end}}</dd>
+    <dt>How long it lasts</dt><dd>On top until someone pays the next price ({{usd $d.NextAfter}}). There is no timer. Afterwards your post keeps its own page, votes and results.</dd>
+    <dt>What we count</dt><dd><strong>Views</strong>: one per browser per hour on the homepage while you're on top, plus views of your post's page; bots excluded. <strong>Clicks</strong>: taps on your link through our redirect. <strong>Video plays</strong>: only when the YouTube player reports playback. We do not see signups or sales; your link carries <span class="mono">utm_source=topfornow</span> so you can measure them yourself.</dd>
+    <dt>Refunds</dt><dd>If another buyer's payment for the same round confirms before yours, or anything stops your post from being published, you are refunded in full automatically. There is no refund for being replaced later.</dd>
+  </dl>
+  {{if $d.State.OverLimit}}
+    <p class="error">The next price is above our card processor's per-payment limit, so online checkout is closed for this round.</p>
+  {{else if and $d.Hold (not $d.MineHeld)}}
+    <p class="hold">Someone else is checking out at this price. Their hold ends <time data-until="{{$d.Hold.ExpiresAt.UTC.Format "2006-01-02T15:04:05Z07:00"}}">soon</time>. If they don't pay, you can go next at the same price. Your draft is saved here.</p>
+  {{else}}
+  <form method="post" action="/draft/{{$p.EditToken}}/checkout">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input type="hidden" name="quoted_cents" value="{{$d.Price}}">
+    <button class="btn buybtn" type="submit">{{if eq $d.Price 0}}Publish the founding post free{{else if $d.MineHeld}}Continue to checkout · {{usd $d.Price}}{{else}}Pay {{usd $d.Price}} and take the spotlight{{end}}</button>
+  </form>
+  <p class="muted small">Pressing pay reserves this round for you for 15 minutes so nobody else can pay the same price meanwhile.</p>
+  {{if $d.MineHeld}}
+  <form method="post" action="/draft/{{$p.EditToken}}/cancel"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="linkbtn">Release my hold</button></form>
+  {{end}}
+  {{end}}
+  <p><a href="/submit">Start over</a></p>
+{{end}}
+</section>
+{{end}}
