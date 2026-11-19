@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{.Title}}</title>
+<meta name="description" content="{{.Description}}">
+{{if .NoIndex}}<meta name="robots" content="noindex">{{end}}
+{{if .Canonical}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+<meta property="og:site_name" content="TopForNow">
+<meta property="og:title" content="{{.Title}}">
+<meta property="og:description" content="{{.Description}}">
+<meta property="og:image" content="{{.OGImage}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{{if .Canonical}}<meta property="og:url" content="{{.Canonical}}">{{end}}
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{.Title}}">
+<meta name="twitter:description" content="{{.Description}}">
+<meta name="twitter:image" content="{{.OGImage}}">
+<meta name="theme-color" content="#14110f">
+<meta name="csrf" content="{{.CSRF}}">
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/rss+xml" title="TopForNow: every new top post" href="/feed.xml">
+<link rel="stylesheet" href="/static/app.css?v=1">
+<script src="/static/app.js?v=1" defer></script>
+</head>
+<body>
+{{if not .Live}}<div class="testbar" role="status"><strong>TEST MODE</strong> · {{if eq .Mode "sandbox"}}payments are simulated{{else}}Dodo Payments test mode{{end}} · no real money moves</div>{{end}}
+<header class="top">
+  <a class="brand" href="/" aria-label="TopForNow home"><span class="brand-mark" aria-hidden="true"></span>TopForNow</a>
+  <nav><a href="/history">Past tops</a><a href="/rules">Rules</a></nav>
+</header>
+<main>
+{{template "content" .}}
+</main>
+<footer class="foot">
+  <p><strong>TopForNow</strong> · one public spot · votes are free and never change who is on top.</p>
+  <p><a href="/rules">Rules</a> · <a href="/rules#terms">Terms</a> · <a href="/rules#privacy">Privacy</a> · <a href="/feed.xml">RSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{{define "content"}}
+{{$d := .Data}}
+<section class="stage">
+  <div class="beam" aria-hidden="true"></div>
+  <p class="eyebrow">The one spot on the internet everyone is looking at right now</p>
+  {{if $d.State.Current}}
+    {{template "card" $d.Card}}
+    <div class="actions">
+      <button type="button" class="btn ghost share" data-url="{{.BaseURL}}/p/{{$d.State.Current.Slug}}?ref=share" data-text="{{if eq $d.State.Current.Kind "opinion"}}“{{$d.State.Current.Headline}}” Agree or disagree?{{else}}“{{$d.State.Current.Headline}}” on TopForNow.{{end}}" data-slug="{{$d.State.Current.Slug}}">Share</button>
+      <a class="btn ghost" href="/submit?reply_to={{$d.State.Current.Slug}}">Respond with your own post</a>
+      <a class="btn ghost" href="/p/{{$d.State.Current.Slug}}/results">Live results</a>
+    </div>
+  {{else}}
+    <article class="card card-big empty">
+      <h2 class="headline">The spotlight is empty.</h2>
+      <p>The first post is free, once. After that, every replacement costs double.</p>
+    </article>
+  {{end}}
+</section>
+
+<section class="buy">
+  {{if $d.State.OverLimit}}
+    <p class="price-note">The next price, <strong>{{usd $d.NextPrice}}</strong>, is above our card processor's per-payment limit. Online checkout is closed for this round. <a href="/rules#limits">Read why</a>.</p>
+  {{else}}
+    <a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight for free{{else}}Take the spotlight for {{usd $d.NextPrice}}{{end}}</a>
+    <p class="price-note">{{if eq $d.NextPrice 0}}Free, once. The next replacement will cost $1.{{else}}Then it costs {{usd (double $d.NextPrice)}} for whoever replaces you.{{end}}
+    {{if $d.HoldUntil}}<br><span class="hold">Someone is checking out at this price right now. Their hold ends <time data-until="{{$d.HoldUntil.UTC.Format "2006-01-02T15:04:05Z07:00"}}">soon</time>.</span>{{end}}</p>
+  {{end}}
+  {{template "rulesbox" (eq $d.TotalRounds 0)}}
+</section>
+
+<section class="stats">
+  <div><span class="k">Rounds so far</span><span class="v">{{$d.TotalRounds}}</span></div>
+  <div><span class="k">Next price</span><span class="v">{{usd $d.NextPrice}}</span></div>
+  {{if $d.Longest}}<div><span class="k">Longest reign</span><span class="v"><a href="/p/{{$d.Longest.Slug}}">{{dur ($d.Longest.TimeOnTop $d.Card.Now)}}</a></span></div>{{end}}
+</section>
+
+{{if $d.History}}
+<section class="past">
+  <h2>Previously on top <small>still open for votes</small></h2>
+  <div class="grid">
+  {{range $d.History}}{{template "card" .}}{{end}}
+  </div>
+  <p><a href="/history">See every past top post →</a> · <a href="/feed.xml">Follow changes by RSS</a></p>
+</section>
+{{end}}
+{{if not $d.State.OverLimit}}<div class="sticky-cta"><a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight free{{else}}Take it for {{usd $d.NextPrice}}{{end}}</a></div>{{end}}
+{{end}}

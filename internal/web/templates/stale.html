@@ -1,0 +1,12 @@
+{{define "content"}}
+{{$s := .Data.Stale}}
+<section class="panel">
+  <h1>The price just changed</h1>
+  <p>Someone took the spotlight while you were deciding, so the price moved from <strong>{{usd $s.Quoted}}</strong> to <strong>{{usd $s.Current}}</strong>. Nothing was charged. Your post is saved.</p>
+  <form method="post" action="/draft/{{.Data.Token}}/checkout">
+    <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="quoted_cents" value="{{$s.Current}}">
+    <button class="btn buybtn">Take it for {{usd $s.Current}}</button>
+  </form>
+  <p><a href="/draft/{{.Data.Token}}">Back to my post</a> · <a href="/">See the new top post</a></p>
+</section>
+{{end}}

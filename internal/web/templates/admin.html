@@ -1,0 +1,64 @@
+{{define "content"}}
+{{$d := .Data}}{{$csrf := .CSRF}}
+<section class="panel admin">
+  <div class="admin-head">
+    <h1>Owner view</h1>
+    <form method="post" action="/admin/logout"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="linkbtn">Sign out</button></form>
+  </div>
+  <p>Mode: <strong class="mono">{{.Mode}}</strong>{{if not .Live}} (test data is labelled and can be purged){{end}} · Rounds: {{$d.State.RoundsPublished}} · Next price: {{usd $d.State.NextPriceCents}}{{if $d.State.ActiveHold}} · Hold active until {{$d.State.ActiveHold.ExpiresAt.UTC.Format "15:04:05 UTC"}}{{end}}</p>
+  {{if $d.Flash}}<p class="ok">{{$d.Flash}}</p>{{end}}
+
+  <h2>Payment reconciliation</h2>
+  {{with $d.Recon}}
+  <p>Published paid posts: {{.PaidPublishedPosts}} · Sum of their prices: {{usd .PublishedCents}} · Sum of payments that published them: {{usd .PublishedPaymentCent}} · Refunded: {{usd .RefundedCents}} · Refunds pending: {{.PendingRefunds}} · Abandoned holds: {{.AbandonedHolds}} · Open disputes: {{.OpenDisputes}}</p>
+  {{if .Problems}}<ul class="error">{{range .Problems}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="ok">All invariants hold: one published post per round, prices follow the doubling rule, every paid round has exactly one payment.</p>{{end}}
+  {{end}}
+  <form method="post" action="/admin/reconcile/fetch" class="inline">
+    <input type="hidden" name="csrf" value="{{$csrf}}">
+    <label>Webhook missing? Pull a payment by id <input name="payment_id" placeholder="pay_..."></label>
+    <button class="btn ghost small">Fetch &amp; apply</button>
+  </form>
+  <form method="post" action="/admin/refunds/run" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="btn ghost small">Retry pending refunds now</button></form>
+
+  <h2>Review queue (before payment)</h2>
+  {{range $d.Review}}
+    <div class="row"><strong>{{.Headline}}</strong> <span class="muted">{{.Kind}} · {{.AuthorName}} · {{.LinkURL}} · flagged: {{.ReviewNotes}}</span>
+      <form method="post" action="/admin/posts/{{.ID}}/approve" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="btn ghost small">Approve</button></form>
+      <form method="post" action="/admin/posts/{{.ID}}/reject" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><input name="note" placeholder="reason"><button class="btn ghost small">Reject</button></form>
+    </div>
+  {{else}}<p class="muted">Nothing waiting.</p>{{end}}
+
+  <h2>Reports</h2>
+  {{range $d.Reports}}
+    <div class="row"><a href="/p/{{.Slug}}">{{.Headline}}</a> <span class="muted">{{.Count}} reports: {{.Reason}}</span>
+      <form method="post" action="/admin/posts/{{.PostID}}/remove" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><input name="reason" placeholder="reason shown internally"><button class="btn ghost small">Remove post</button></form>
+      <form method="post" action="/admin/posts/{{.PostID}}/dismiss" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="btn ghost small">Dismiss</button></form>
+    </div>
+  {{else}}<p class="muted">No open reports.</p>{{end}}
+
+  <h2>Traffic (humans only, bots counted separately)</h2>
+  <table><tr><th></th><th>Visitors</th><th>Votes</th><th>Clicks</th><th>Video plays</th><th>Checkouts</th><th>Bot hits</th></tr>
+  <tr><td>24h</td><td>{{$d.Day.HumanVisitors}}</td><td>{{$d.Day.Votes}}</td><td>{{$d.Day.Clicks}}</td><td>{{$d.Day.VideoPlays}}</td><td>{{$d.Day.Checkouts}}</td><td>{{$d.Day.BotHits}}</td></tr>
+  <tr><td>7d</td><td>{{$d.Week.HumanVisitors}}</td><td>{{$d.Week.Votes}}</td><td>{{$d.Week.Clicks}}</td><td>{{$d.Week.VideoPlays}}</td><td>{{$d.Week.Checkouts}}</td><td>{{$d.Week.BotHits}}</td></tr></table>
+  <h3>Funnel by first-touch source (30 days)</h3>
+  <table><tr><th>Source</th><th>Visitors</th><th>Voted</th><th>Clicked</th><th>Started checkout</th><th>Paid posts</th><th>Published</th></tr>
+  {{range $d.Funnel}}<tr><td class="mono">{{.Source}}</td><td>{{.Visitors}}</td><td>{{.Voters}}</td><td>{{.Clickers}}</td><td>{{.Checkouts}}</td><td>{{.Payments}}</td><td>{{.Pubs}}</td></tr>{{end}}</table>
+
+  <h2>Payments</h2>
+  <div class="scroll"><table><tr><th>#</th><th>Provider id</th><th>Post</th><th>Round</th><th>Amount</th><th>Status</th><th>Outcome</th><th>Refund</th><th></th></tr>
+  {{range $d.Payments}}<tr><td>{{.ID}}{{if .IsTest}} <span class="pill">test</span>{{end}}</td><td class="mono">{{.ProviderPaymentID}}</td><td>{{if .PostSlug}}<a href="/p/{{.PostSlug}}">{{.PostSlug}}</a>{{end}}</td><td>{{if .Round}}{{deref .Round}}{{end}}</td><td>{{usd .AmountCents}} {{.Currency}}</td><td>{{.Status}}{{if .Dispute}} · {{.Dispute}}{{end}}</td><td>{{.Outcome}}</td><td class="mono">{{.RefundID}}</td>
+  <td>{{if eq .Status "succeeded"}}<form method="post" action="/admin/payments/{{.ID}}/refund" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="btn ghost small">Refund</button></form>{{end}}</td></tr>{{end}}
+  </table></div>
+
+  <h2>Recent posts</h2>
+  <div class="scroll"><table><tr><th>ID</th><th>Status</th><th>Round</th><th>Kind</th><th>Headline</th><th>By</th><th></th></tr>
+  {{range $d.Recent}}<tr><td>{{.ID}}{{if .IsTest}} <span class="pill">test</span>{{end}}</td><td>{{.Status}}</td><td>{{if .Round}}{{deref .Round}}{{end}}</td><td>{{.Kind}}</td><td>{{if .Round}}<a href="/p/{{.Slug}}">{{.Headline}}</a>{{else}}{{.Headline}}{{end}}</td><td>{{.AuthorName}}</td>
+  <td>{{if eq .Status "published"}}<form method="post" action="/admin/posts/{{.ID}}/remove" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><input name="reason" placeholder="reason"><button class="btn ghost small">Remove</button></form>{{end}}</td></tr>{{end}}
+  </table></div>
+
+  {{if not .Live}}
+  <h2>Test data</h2>
+  <form method="post" action="/admin/test-data/purge" class="inline"><input type="hidden" name="csrf" value="{{$csrf}}"><label>Type PURGE to delete all test-labelled rows and reset the spotlight <input name="confirm"></label><button class="btn ghost small">Purge test data</button></form>
+  {{end}}
+</section>
+{{end}}

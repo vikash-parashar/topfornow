@@ -1,0 +1,32 @@
+{{define "content"}}
+{{$d := .Data}}
+<section class="panel">
+  <h1>{{if $d.Founding}}Take the first spotlight, free{{else}}Take the spotlight for {{usd $d.Price}}{{end}}</h1>
+  <p class="muted">You will see an exact preview and the final USD price before paying anything.</p>
+  {{if $d.ReplyTo}}<p class="replyto">You are responding to <a href="/p/{{$d.ReplyTo.Slug}}">“{{$d.ReplyTo.Headline}}”</a>. Your post will link back to it.</p>{{end}}
+  {{if $d.Error}}<p class="error" role="alert">{{$d.Error}}</p>{{end}}
+  <form method="post" action="/submit" class="form">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    {{if $d.ReplyTo}}<input type="hidden" name="reply_to" value="{{$d.ReplyTo.Slug}}">{{end}}
+    <fieldset class="kinds">
+      <legend>What are you putting on top?</legend>
+      <label class="kind"><input type="radio" name="kind" value="opinion" {{if eq $d.Kind "opinion"}}checked{{end}}><span><strong>An opinion</strong><small>One line you want people to hear. Voters pick Agree or Disagree.</small></span></label>
+      <label class="kind"><input type="radio" name="kind" value="creator" {{if eq $d.Kind "creator"}}checked{{end}}><span><strong>Creator content</strong><small>A YouTube video/Short or public Instagram post/Reel, embedded.</small></span></label>
+      <label class="kind"><input type="radio" name="kind" value="product" {{if eq $d.Kind "product"}}checked{{end}}><span><strong>A product</strong><small>An app, website or demo. Shown with its link.</small></span></label>
+    </fieldset>
+    <label>One line <small>(3–120 characters)</small>
+      <input name="headline" maxlength="120" required value="{{$d.Headline}}" placeholder="Pineapple belongs on pizza and I will not be taking questions" autocomplete="off"></label>
+    <label>Link <small class="link-hint">(optional for opinions; required for creators and products)</small>
+      <input name="link" inputmode="url" maxlength="500" value="{{$d.Link}}" placeholder="https://youtu.be/… or https://yourapp.com"></label>
+    <label>Short description <small>(optional, up to 200 characters)</small>
+      <textarea name="body" maxlength="200" rows="2">{{$d.Body}}</textarea></label>
+    <label>Name shown as the buyer <small>(person, channel or company)</small>
+      <input name="author" maxlength="40" required value="{{$d.Author}}" autocomplete="nickname"></label>
+    <label>Email for your receipt link <small>(optional, never shown)</small>
+      <input name="email" type="email" maxlength="120" value="{{$d.Email}}" autocomplete="email"></label>
+    <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+    <label class="check"><input type="checkbox" name="agree" value="yes" required> I agree to the <a href="/rules" target="_blank">rules</a>: no scams, hate, adult content, or links to chat invites and shorteners. No refund when someone replaces me.</label>
+    <button class="btn buybtn" type="submit">Preview my post</button>
+  </form>
+</section>
+{{end}}

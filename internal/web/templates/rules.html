@@ -1,0 +1,30 @@
+{{define "content"}}
+<section class="panel prose">
+  <h1>Rules</h1>
+  <ol>
+    <li><strong>One spot.</strong> TopForNow shows one featured post at the top. Everyone sees it first.</li>
+    <li><strong>The founding rule.</strong> The first featured post was free, once. Each later replacement costs double the one before: $1, $2, $4, $8, $16, $32 and so on. The current next price is <strong>{{usd .Data.NextPriceCents}}</strong>.</li>
+    <li><strong>Full price, every time.</strong> Each buyer pays the full displayed price for their replacement. There are no partial top-ups and no discounts.</li>
+    <li><strong>How long it lasts.</strong> A post stays on top until another payment successfully replaces it. There is no timer.</li>
+    <li><strong>Nothing disappears.</strong> Replaced posts keep their own permanent page with their votes, link, time on top and results.</li>
+    <li><strong>Votes are free</strong>, belong to each post, and never decide who is on top. Opinions get Agree / Disagree; videos get Worth watching / Not for me; products get Would try it / Not for me. One vote per browser per post, with limits per network.</li>
+    <li><strong>Three kinds of post.</strong> A one-line opinion, a YouTube or Instagram post, or a product link. Each paid post shows who paid and how much.</li>
+    <li><strong>Not allowed:</strong> scams, hate or harassment, sexual content, violence, illegal goods, gambling, link shorteners, chat or group invites, file downloads, and impersonation. Posts are screened before payment; some are held for a human review first. A post that breaks the rules can be removed after publishing; the round still counts and there is no refund.</li>
+  </ol>
+  <h2 id="checkout">Checkout, reservations and refunds</h2>
+  <ul>
+    <li>When you press pay, the round is reserved for you for 15 minutes at the price you saw. Nobody else can pay that price during your hold.</li>
+    <li>Your post is published only after our payment provider confirms the payment to our server. Closing the browser after paying is fine.</li>
+    <li>If, for any reason, your payment confirms after the round was already taken (for example, you paid after your hold expired and someone else paid first), you are <strong>refunded in full automatically</strong>.</li>
+    <li>No refund for being replaced, for fewer views or clicks than hoped, or for rule-breaking content.</li>
+  </ul>
+  <h2 id="limits">Payment limits</h2>
+  <p>Card processors cap single payments. When the doubled price passes our processor's per-payment limit, online checkout closes for that round and the page says so. The price never skips and is never lowered.</p>
+  <h2 id="counting">How results are counted</h2>
+  <p>Views are unique browsers per hour, with known bots excluded. Clicks are taps through our redirect. Video plays are counted only when the YouTube player reports playback. We never claim signups or sales; product links carry a <span class="mono">utm_source=topfornow</span> tag so the buyer can measure those.</p>
+  <h2 id="terms">Terms</h2>
+  <p>TopForNow sells a spotlight placement: display of your post in the top spot until it is replaced, and a permanent post page afterwards. It is not an auction of chance and no prize is paid. Payments are processed by Dodo Payments as merchant of record. Prices are in US dollars. We may remove content that breaks these rules.</p>
+  <h2 id="privacy">Privacy</h2>
+  <p>We set a first-party cookie to count unique visitors and remember your votes. We store a daily-rotating hash of your network address to limit duplicate votes, never the address itself. Payment details are collected by the payment provider, not by us. Your optional email is used only to find your receipt and is never shown.</p>
+</section>
+{{end}}

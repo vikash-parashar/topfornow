@@ -1,0 +1,9 @@
+{{define "content"}}
+<section class="panel" id="return" data-hold="{{.Data.Hold.ID}}">
+  <h1>Confirming your payment…</h1>
+  <p class="status-msg" aria-live="polite">Waiting for the payment provider to confirm. This usually takes a few seconds. You can close this page; your post is published as soon as payment is confirmed.</p>
+  <div class="spinner" aria-hidden="true"></div>
+  <p class="muted small">Round {{.Data.Hold.Round}} · {{usd .Data.Hold.PriceCents}}{{if .Data.Post}} · <a href="/draft/{{.Data.Post.EditToken}}">your post page</a>{{end}}</p>
+  <noscript><p><a href="">Refresh</a> to check again.</p></noscript>
+</section>
+{{end}}
