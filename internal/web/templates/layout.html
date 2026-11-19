@@ -19,19 +19,21 @@
 <meta name="twitter:title" content="{{.Title}}">
 <meta name="twitter:description" content="{{.Description}}">
 <meta name="twitter:image" content="{{.OGImage}}">
-<meta name="theme-color" content="#14110f">
+<meta name="theme-color" content="#efe9dc">
+<link rel="preload" href="/static/fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
 <meta name="csrf" content="{{.CSRF}}">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="alternate" type="application/rss+xml" title="TopForNow: every new top post" href="/feed.xml">
-<link rel="stylesheet" href="/static/app.css?v=2">
-<script src="/static/app.js?v=2" defer></script>
+<link rel="stylesheet" href="/static/app.css?v=3">
+<script src="/static/app.js?v=3" defer></script>
 </head>
-<body>
-<div class="cursor-glow" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+<body class="{{block "bodyclass" .}}page{{end}}">
 {{if not .Live}}<div class="testbar" role="status"><strong>TEST MODE</strong> · {{if eq .Mode "sandbox"}}payments are simulated{{else}}Dodo Payments test mode{{end}} · no real money moves</div>{{end}}
-<header class="top">
-  <a class="brand" href="/" aria-label="TopForNow home"><svg class="brand-mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true"><path class="bm-beam" d="M22 2h20l14 50H8z"/><path class="bm-crown" d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z"/><rect class="bm-base" x="12" y="52" width="40" height="7" rx="2"/></svg><span class="brand-word">Top<em>For</em>Now</span></a>
-  <nav><a href="/history">Past tops</a><a href="/rules">Rules</a></nav>
+<header class="mast">
+  <div class="dateline"><span class="dl-vol">Vol. I</span><span class="dl-date">{{today}}</span><nav><a href="/history">Back issues</a><a href="/rules">Rules</a></nav></div>
+  <a class="masthead" href="/" aria-label="TopForNow home"><span class="mh-word">TopForNow</span></a>
+  <p class="motto"><span>One spot on the internet.</span> <span>Every new front page costs double.</span></p>
 </header>
 <main>
 {{template "content" .}}

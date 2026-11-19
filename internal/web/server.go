@@ -155,6 +155,7 @@ var funcs = template.FuncMap{
 	},
 	"deref": func(i *int) int { if i == nil { return -1 }; return *i },
 	"ladder": priceLadder,
+	"today":  func() string { return time.Now().UTC().Format("Mon 2 Jan 2006") },
 	"barH": func(c, max int64) int64 {
 		if max <= 0 || c <= 0 {
 			return 0

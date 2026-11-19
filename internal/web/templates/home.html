@@ -1,36 +1,28 @@
+{{define "bodyclass"}}page is-home{{end}}
 {{define "content"}}
 {{$d := .Data}}
-{{if $d.History}}
-<div class="ticker" aria-hidden="true"><div class="ticker-track">
-  {{range $i, $h := $d.History}}{{if lt $i 8}}<span class="tk"><b>R{{deref $h.P.Round}}</b> {{if eq $h.P.PriceCents 0}}FREE{{else}}{{usd $h.P.PriceCents}}{{end}} · {{$h.P.Headline}}</span>{{end}}{{end}}
-  <span class="tk tk-hot">NEXT {{usd $d.NextPrice}} · then {{usd (double $d.NextPrice)}}</span>
-  {{range $i, $h := $d.History}}{{if lt $i 8}}<span class="tk"><b>R{{deref $h.P.Round}}</b> {{if eq $h.P.PriceCents 0}}FREE{{else}}{{usd $h.P.PriceCents}}{{end}} · {{$h.P.Headline}}</span>{{end}}{{end}}
-  <span class="tk tk-hot">NEXT {{usd $d.NextPrice}} · then {{usd (double $d.NextPrice)}}</span>
+<div class="tape" aria-hidden="true"><div class="tape-track">
+  {{range $k := ladder $d.TotalRounds}}<span class="tp tp-{{.State}}">R{{.Round}} <b>{{if eq .Cents 0}}FREE{{else}}{{usd .Cents}}{{end}}</b>{{if eq .State "taken"}} ▼ SOLD{{else if eq .State "next"}} ▲ OPEN{{end}}</span>{{end}}
+  {{range $k := ladder $d.TotalRounds}}<span class="tp tp-{{.State}}">R{{.Round}} <b>{{if eq .Cents 0}}FREE{{else}}{{usd .Cents}}{{end}}</b>{{if eq .State "taken"}} ▼ SOLD{{else if eq .State "next"}} ▲ OPEN{{end}}</span>{{end}}
 </div></div>
-{{end}}
 
-<section class="stage">
-  <div class="beams" aria-hidden="true"><i class="beam b1"></i><i class="beam b2"></i><i class="beam b3"></i></div>
-  <div class="dust" aria-hidden="true"></div>
-  <p class="eyebrow rise"><span class="live-dot" aria-hidden="true"></span>Live · the one spot on the internet</p>
+<section class="front">
+  <div class="front-head">
+    <span class="edition">Edition No. {{$d.TotalRounds}}</span>
+    {{if $d.State.Current}}<span class="live"><i aria-hidden="true"></i>On the front page now</span>{{end}}
+  </div>
   {{if $d.State.Current}}
-    <div class="throne rise r2">
-      <div class="crown" aria-hidden="true"><svg viewBox="0 0 64 40" width="64" height="40"><path d="M4 36 L8 10 L22 24 L32 4 L42 24 L56 10 L60 36 Z" fill="currentColor"/><circle cx="8" cy="9" r="4" fill="currentColor"/><circle cx="32" cy="4" r="4" fill="currentColor"/><circle cx="56" cy="9" r="4" fill="currentColor"/></svg></div>
-      {{template "card" $d.Card}}
-    </div>
-    <div class="actions rise r3">
+    {{template "card" $d.Card}}
+    <div class="actions">
       <button type="button" class="btn ghost share" data-url="{{.BaseURL}}/p/{{$d.State.Current.Slug}}?ref=share" data-text="{{if eq $d.State.Current.Kind "opinion"}}“{{$d.State.Current.Headline}}” Agree or disagree?{{else}}“{{$d.State.Current.Headline}}” on TopForNow.{{end}}" data-slug="{{$d.State.Current.Slug}}">Share</button>
       <a class="btn ghost" href="/submit?reply_to={{$d.State.Current.Slug}}">Respond with your own post</a>
       <a class="btn ghost" href="/p/{{$d.State.Current.Slug}}/results">Live results</a>
     </div>
   {{else}}
-    <div class="throne rise r2">
-      <div class="crown crown-empty" aria-hidden="true"><svg viewBox="0 0 64 40" width="64" height="40"><path d="M4 36 L8 10 L22 24 L32 4 L42 24 L56 10 L60 36 Z" fill="none" stroke="currentColor" stroke-width="3"/></svg></div>
-      <article class="card card-big empty">
-        <h2 class="headline">The throne is empty.</h2>
-        <p>The first post is free, once. After that, every replacement costs double.</p>
-      </article>
-    </div>
+    <article class="card card-big empty">
+      <h2 class="headline"><span class="hl">The front page is empty.</span></h2>
+      <p>The first post is free, once. After that, every replacement costs double.</p>
+    </article>
   {{end}}
 </section>
 
@@ -38,35 +30,33 @@
   {{if $d.State.OverLimit}}
     <p class="price-note">The next price, <strong>{{usd $d.NextPrice}}</strong>, is above our card processor's per-payment limit. Online checkout is closed for this round. <a href="/rules#limits">Read why</a>.</p>
   {{else}}
-    <div class="pricehero" aria-label="Next price {{usd $d.NextPrice}}">
-      <span class="ph-label">{{if eq $d.NextPrice 0}}Founding post{{else}}Price to take it{{end}}</span>
-      <span class="ph-num" data-roll-to="{{$d.NextPrice}}" data-roll-from="{{half $d.NextPrice}}">{{if eq $d.NextPrice 0}}FREE{{else}}{{usd $d.NextPrice}}{{end}}</span>
-      {{if gt $d.NextPrice 100}}<span class="x2" aria-hidden="true">×2</span>{{end}}
-    </div>
-    <a class="btn buybtn shine" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight for free{{else}}Take the spotlight for {{usd $d.NextPrice}}{{end}}</a>
-    <p class="price-note">{{if eq $d.NextPrice 0}}Free, once. The next replacement will cost $1.{{else}}Then it costs {{usd (double $d.NextPrice)}} for whoever replaces you.{{end}}</p>
-    {{if $d.HoldUntil}}<div class="fuse" role="status"><span class="fuse-spark" aria-hidden="true"></span><span class="hold">Someone is checking out at this price. Their hold ends <time data-until="{{$d.HoldUntil.UTC.Format "2006-01-02T15:04:05Z07:00"}}">soon</time>.</span></div>{{end}}
+  <div class="classified">
+    <p class="cl-kicker">Wanted</p>
+    <p class="cl-title">A new front page</p>
+    <p class="flapboard" aria-label="Price {{if eq $d.NextPrice 0}}free{{else}}{{usd $d.NextPrice}}{{end}}"><span class="flaps" data-flap="{{if eq $d.NextPrice 0}}FREE{{else}}{{usd $d.NextPrice}}{{end}}">{{if eq $d.NextPrice 0}}FREE{{else}}{{usd $d.NextPrice}}{{end}}</span></p>
+    <p class="cl-terms">{{if eq $d.NextPrice 0}}Free, once. The next replacement will cost $1.{{else}}Full price, paid once. Then it costs {{usd (double $d.NextPrice)}} for whoever replaces you.{{end}}</p>
+    <a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight for free{{else}}Take the spotlight for {{usd $d.NextPrice}}{{end}}</a>
+    {{if gt $d.NextPrice 100}}<span class="stamp" aria-hidden="true">×2</span>{{end}}
+  </div>
+  {{if $d.HoldUntil}}<p class="hold" role="status"><b>Held.</b> Someone is checking out at this price. Their hold ends <time data-until="{{$d.HoldUntil.UTC.Format "2006-01-02T15:04:05Z07:00"}}">soon</time>.</p>{{end}}
   {{end}}
-  <ol class="ladder" aria-label="The doubling price ladder">
-    {{range ladder $d.TotalRounds}}<li class="rung rung-{{.State}}"><span class="rung-r">R{{.Round}}</span><span class="rung-p">{{if eq .Cents 0}}FREE{{else}}{{usd .Cents}}{{end}}</span>{{if eq .State "next"}}<span class="rung-tag">you?</span>{{end}}</li>{{end}}
-  </ol>
   {{template "rulesbox" (eq $d.TotalRounds 0)}}
 </section>
 
 <section class="stats">
-  <div><span class="k">Rounds so far</span><span class="v">{{$d.TotalRounds}}</span></div>
-  <div><span class="k">Next price</span><span class="v">{{usd $d.NextPrice}}</span></div>
+  <div><span class="k">Editions so far</span><span class="v">{{$d.TotalRounds}}</span></div>
+  <div><span class="k">Next front page</span><span class="v">{{usd $d.NextPrice}}</span></div>
   {{if $d.Longest}}<div><span class="k">Longest reign</span><span class="v"><a href="/p/{{$d.Longest.Slug}}">{{dur ($d.Longest.TimeOnTop $d.Card.Now)}}</a></span></div>{{end}}
 </section>
 
 {{if $d.History}}
 <section class="past">
-  <h2>Hall of the dethroned <small>still open for votes</small></h2>
+  <h2 class="section-h">Back issues <small>still open for votes</small></h2>
   <div class="grid fallen">
   {{range $d.History}}{{template "card" .}}{{end}}
   </div>
-  <p><a href="/history">See every past top post →</a> · <a href="/feed.xml">Follow changes by RSS</a></p>
+  <p class="more"><a href="/history">Every back issue →</a> <a href="/feed.xml">RSS</a></p>
 </section>
 {{end}}
-{{if not $d.State.OverLimit}}<div class="sticky-cta"><a class="btn buybtn shine" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight free{{else}}Take it for {{usd $d.NextPrice}}{{end}}</a></div>{{end}}
+{{if not $d.State.OverLimit}}<div class="sticky-cta"><a class="btn buybtn" href="/submit">{{if eq $d.NextPrice 0}}Take the first spotlight free{{else}}Take it for {{usd $d.NextPrice}}{{end}}</a></div>{{end}}
 {{end}}

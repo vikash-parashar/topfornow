@@ -25,10 +25,10 @@ import (
 )
 
 var (
-	colInk   = color.RGBA{0x14, 0x11, 0x0f, 0xff}
-	colPaper = color.RGBA{0xff, 0xf6, 0xe0, 0xff}
-	colAmber = color.RGBA{0xff, 0xb7, 0x03, 0xff}
-	colCoral = color.RGBA{0xe8, 0x4a, 0x27, 0xff}
+	colInk   = color.RGBA{0x12, 0x11, 0x10, 0xff}
+	colPaper = color.RGBA{0xf7, 0xf3, 0xea, 0xff}
+	colAmber = color.RGBA{0xff, 0xe1, 0x4a, 0xff}
+	colCoral = color.RGBA{0xe2, 0x23, 0x1a, 0xff}
 	colMuted = color.RGBA{0x6b, 0x5e, 0x50, 0xff}
 )
 
@@ -146,7 +146,7 @@ func renderReceipt(in ReceiptInput) []byte {
 	// spotlight glow
 	for i := 0; i < 18; i++ {
 		a := uint8(10 + i)
-		c.rect(W/2-460+i*25, 0, W/2+460-i*25, 70-i*3, color.NRGBA{0xff, 0xb7, 0x03, a})
+		c.rect(W/2-460+i*25, 0, W/2+460-i*25, 70-i*3, color.NRGBA{0xe2, 0x23, 0x1a, a / 3})
 	}
 	px0, px1, py0, py1 := 90, W-90, 110, H-110
 	c.rect(px0, py0, px1, py1, colPaper)
@@ -338,7 +338,7 @@ func (s *Server) homeImage(w http.ResponseWriter, r *http.Request) {
 	W, H := 1200, 630
 	c := newCanvas(W, H, colInk)
 	for i := 0; i < 24; i++ {
-		c.rect(W/2-520+i*20, 0, W/2+520-i*20, 300-i*12, color.NRGBA{0xff, 0xb7, 0x03, uint8(6 + i)})
+		c.rect(W/2-520+i*20, 0, W/2+520-i*20, 300-i*12, color.NRGBA{0xe2, 0x23, 0x1a, uint8(2 + i/3)})
 	}
 	c.centered("TopForNow", W/2, 250, face("bold", 120), colPaper)
 	c.centered("One public top spot. Read and vote free.", W/2, 340, face("reg", 40), colPaper)

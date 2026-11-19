@@ -51,7 +51,6 @@
         box.dataset.mine = j.mine;
         setCount(box.querySelector(".up .n"), j.up);
         setCount(box.querySelector(".down .n"), j.down);
-        if (j.mine !== 0) burst(b, j.mine === 1 ? ["✦", "★", "▲", "✺"] : ["✕", "▼", "☁"]);
         box.querySelector(".up").classList.toggle("on", j.mine === 1);
         box.querySelector(".down").classList.toggle("on", j.mine === -1);
         var bar = box.querySelector(".bar");
@@ -143,81 +142,43 @@
   }
 
 
-  // ---- Throne Room motion (decoration only; off under reduced motion) ----
+  // ---- Extra Edition motion (decoration only; off under reduced motion) ----
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   function setCount(el, n) {
     if (!el) return;
     if (String(n) !== el.textContent) { el.textContent = n; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
   }
-  function burst(from, glyphs) {
-    if (calm) return;
-    var r = from.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    for (var i = 0; i < 14; i++) {
-      var p = document.createElement("span");
-      p.className = "burst"; p.textContent = glyphs[i % glyphs.length];
-      p.style.left = cx + "px"; p.style.top = cy + "px";
-      p.style.color = ["#ffd166", "#ff2e63", "#3ddc84", "#7c5cff", "#fff6e0"][i % 5];
-      document.body.appendChild(p);
-      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 70;
-      p.animate([
-        { transform: "translate(-50%,-50%) scale(.4)", opacity: 1 },
-        { transform: "translate(" + (Math.cos(a) * d - 10) + "px," + (Math.sin(a) * d - 40) + "px) scale(1.2) rotate(" + (Math.random() * 360) + "deg)", opacity: 0 }
-      ], { duration: 700 + Math.random() * 400, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = (function (el) { return function () { el.remove(); }; })(p);
+  // Split-flap price board: each character flips through digits and lands in turn.
+  var board = document.querySelector(".flaps[data-flap]");
+  if (board) {
+    var text = board.dataset.flap, cells = [];
+    board.textContent = "";
+    for (var i = 0; i < text.length; i++) {
+      var c = document.createElement("span"), ch = text[i], digit = /[0-9A-Z]/.test(ch);
+      c.className = "flap" + (digit ? "" : " sym"); c.textContent = calm || !digit ? ch : "0";
+      c.setAttribute("aria-hidden", "true"); board.appendChild(c); cells.push([c, ch, digit]);
     }
-  }
-  function money(c) { return c >= 100 ? "$" + Math.round(c / 100).toLocaleString("en-US") : "$" + (c / 100).toFixed(2); }
-  // The price rolls up from the last price to the doubled one.
-  var num = document.querySelector(".ph-num[data-roll-to]");
-  if (num && !calm) {
-    var to = +num.dataset.rollTo, from = +num.dataset.rollFrom;
-    if (to >= 200) {
-      var t0 = null, dur = 1100;
-      num.textContent = money(from);
-      requestAnimationFrame(function step(t) {
-        if (!t0) t0 = t;
-        var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 4);
-        num.textContent = money(Math.round((from + (to - from) * e) / 100) * 100);
-        if (k < 1) requestAnimationFrame(step); else num.textContent = money(to);
+    if (!calm) {
+      cells.forEach(function (it, idx) {
+        if (!it[2]) return;
+        var n = 0, stop = 8 + idx * 4;
+        setTimeout(function spin() {
+          it[0].classList.remove("turn"); void it[0].offsetWidth; it[0].classList.add("turn");
+          if (n++ >= stop) { it[0].textContent = it[1]; return; }
+          it[0].textContent = /[A-Z]/.test(it[1]) ? String.fromCharCode(65 + Math.floor(Math.random() * 26)) : String(Math.floor(Math.random() * 10));
+          setTimeout(spin, 55);
+        }, 500);
       });
     }
   }
-  if (!calm) {
-    // Spotlight follows the pointer; the top card tilts toward it.
-    var big = document.querySelector(".throne .card-big");
-    var fine = window.matchMedia("(pointer: fine)").matches;
-    if (fine) {
-      document.documentElement.classList.add("has-pointer");
-      var root = document.documentElement.style, pend = false, lx = 0, ly = 0;
-      window.addEventListener("pointermove", function (e) {
-        lx = e.clientX; ly = e.clientY;
-        if (pend) return; pend = true;
-        requestAnimationFrame(function () {
-          pend = false;
-          root.setProperty("--mx", lx + "px"); root.setProperty("--my", ly + "px");
-          if (big) {
-            var r = big.getBoundingClientRect();
-            var dx = (lx - (r.left + r.width / 2)) / r.width, dy = (ly - (r.top + r.height / 2)) / r.height;
-            if (Math.abs(dx) < 1.2 && Math.abs(dy) < 1.4) {
-              big.style.setProperty("--ry", (dx * 3).toFixed(2) + "deg"); big.style.setProperty("--rx", (-dy * 2.5).toFixed(2) + "deg");
-            } else { big.style.setProperty("--ry", "0deg"); big.style.setProperty("--rx", "0deg"); }
-          }
-        });
-      }, { passive: true });
-    }
-    // Cards rise in as they scroll into view.
-    if ("IntersectionObserver" in window) {
-      var io = new IntersectionObserver(function (es) {
-        es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
-      }, { rootMargin: "0px 0px -8% 0px" });
-      document.querySelectorAll(".fallen .card, .stats > div, .kpi").forEach(function (el, i) {
-        el.classList.add("reveal"); el.style.transitionDelay = (i % 4) * 70 + "ms"; io.observe(el);
-      });
-    }
-    // Keep the next rung of the ladder centred on small screens.
-    var next = document.querySelector(".rung-next");
-    if (next && next.parentElement.scrollWidth > next.parentElement.clientWidth) {
-      next.parentElement.scrollLeft = next.offsetLeft - next.parentElement.clientWidth / 2 + next.clientWidth / 2;
-    }
+  // Back issues and figures slide in as they come into view.
+  if (!calm && "IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
+    }, { rootMargin: "0px 0px -6% 0px" });
+    document.querySelectorAll(".fallen .card, .stats > div, .kpi").forEach(function (el, i) {
+      el.classList.add("reveal"); el.style.transitionDelay = (i % 3) * 80 + "ms"; io.observe(el);
+    });
   }
 
   // Link hint on the submit form.

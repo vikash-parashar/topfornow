@@ -6,14 +6,14 @@
     {{if $p.Round}}
       {{if $p.OnTop}}<span class="pill pill-live">On top now</span>{{else if eq $p.Status "removed"}}<span class="pill">Removed</span>{{else}}<span class="pill">Round {{deref $p.Round}}</span>{{end}}
     {{else if .Preview}}<span class="pill pill-preview">Preview</span>{{end}}
-    {{if $p.PublishedAt}}<span class="ontop" title="Time on top">⏱ <span {{if $p.OnTop}}data-since="{{iso $p.PublishedAt}}"{{end}}>{{dur ($p.TimeOnTop .Now)}}</span> on top</span>{{end}}
+    {{if $p.PublishedAt}}<span class="ontop" title="Time on top"><span {{if $p.OnTop}}data-since="{{iso $p.PublishedAt}}"{{end}}>{{dur ($p.TimeOnTop .Now)}}</span> on top</span>{{end}}
   </div>
   {{if eq $p.Status "removed"}}
     <p class="headline">This post was removed by a moderator.</p>
     <p class="muted">It broke the rules. The round still counts and the price does not go back down.</p>
   {{else}}
   {{if $p.ReplyTo}}<p class="replyto">Responding to <a href="/p/{{$p.ReplyTo.Slug}}">“{{$p.ReplyTo.Headline}}”</a></p>{{end}}
-  <h2 class="headline">{{if eq $p.Kind "opinion"}}“{{$p.Headline}}”{{else}}{{$p.Headline}}{{end}}</h2>
+  <h2 class="headline">{{if .Big}}<span class="hl">{{end}}{{if eq $p.Kind "opinion"}}“{{$p.Headline}}”{{else}}{{$p.Headline}}{{end}}{{if .Big}}</span>{{end}}</h2>
   {{if $p.Body}}<p class="body">{{$p.Body}}</p>{{end}}
 
   {{if eq $p.EmbedProvider "youtube"}}

@@ -7,7 +7,7 @@ One public top spot. The first post was free, once. Every replacement after that
 - `docs/launch-plan.md`: 14-day plan, venues and rules, all launch copy (Look At Me Tax)
 - `docs/operations.md`: payment design, Dodo underwriting questions, deploy, backup, rollback, going live
 - `docs/screenshots/`: browser acceptance run (phone + desktop); `docs/creative/`: campaign preview cards
-- `docs/redesign/`: "Throne Room" UI screenshots; `docs/brand/`: logo concepts (SVG) and share-card templates
+- `docs/redesign/`: "Extra Edition" UI screenshots (newsprint tabloid design); `docs/brand/`: logo concepts (SVG) and share-card templates
 - `docs/feature-ideas.md`: prioritised next features
 
 ## Run locally

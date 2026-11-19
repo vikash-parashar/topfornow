@@ -2,7 +2,7 @@
 <section class="panel narrow login-card">
   <div class="crown" aria-hidden="true"><svg viewBox="0 0 64 40" width="56" height="35"><path d="M4 36 L8 10 L22 24 L32 4 L42 24 L56 10 L60 36 Z" fill="currentColor"/></svg></div>
   <h1>Owner sign in</h1>
-  <p class="sub">Your money, your throne, your rules.</p>
+  <p class="sub">The ledger. Owner eyes only.</p>
   {{if .Data}}<p class="error" role="alert">{{.Data}}</p>{{end}}
   <form method="post" action="/admin/login" class="form">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
