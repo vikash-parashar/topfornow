@@ -50,7 +50,15 @@ Test data removal: admin "Purge test data" (sandbox/test only) or `topfornow pur
 
 `DATABASE_URL`, `APP_SECRET` (≥32 chars, signs cookies), `ADMIN_PASSWORD`, `BASE_URL`, `PAYMENT_MODE`, `TRUST_PROXY=true` behind Fly; Dodo modes add `DODO_API_KEY`, `DODO_PRODUCT_ID`, `DODO_WEBHOOK_SECRET`; `MAX_CHECKOUT_CENTS`.
 
-## Deploy on Fly.io (recommended)
+## Deploy on Render free + Neon free (chosen, $0)
+
+1. **Neon**: sign up at neon.tech, create a project in AWS Singapore, copy the **direct** connection string (host without `-pooler`, ends `?sslmode=require`). Direct is needed because migrations take a session advisory lock. Neon free keeps a short point-in-time restore window; also run the `pg_dump` below weekly.
+2. **Render**: sign up with GitHub, New → **Blueprint** → pick `vikash-parashar/topfornow`. Render reads `render.yaml`, generates `APP_SECRET`, and asks for `DATABASE_URL`, `ADMIN_PASSWORD` and `BASE_URL` (`https://<service>.onrender.com`).
+3. Every push to `main` redeploys; migrations run on boot. HTTPS is automatic. Health check `/healthz`.
+4. **Rollback:** Render dashboard → service → Events → pick an earlier deploy → "Rollback".
+5. **Free-tier limits:** the service sleeps after 15 idle minutes (first visit then takes ~1 minute) and has 750 free hours/month. Move to a paid instance or Fly before any real launch traffic.
+
+## Alternative: Fly.io
 
 Fly gives HTTPS on `*.fly.dev`, secrets, health checks, one-command rollback, and runs the Docker image as is. Postgres: Fly's own, or a free external one (Neon / Supabase) via `DATABASE_URL`.
 
