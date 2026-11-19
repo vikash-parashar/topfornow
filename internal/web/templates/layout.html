@@ -23,13 +23,14 @@
 <meta name="csrf" content="{{.CSRF}}">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="alternate" type="application/rss+xml" title="TopForNow: every new top post" href="/feed.xml">
-<link rel="stylesheet" href="/static/app.css?v=1">
-<script src="/static/app.js?v=1" defer></script>
+<link rel="stylesheet" href="/static/app.css?v=2">
+<script src="/static/app.js?v=2" defer></script>
 </head>
 <body>
+<div class="cursor-glow" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
 {{if not .Live}}<div class="testbar" role="status"><strong>TEST MODE</strong> · {{if eq .Mode "sandbox"}}payments are simulated{{else}}Dodo Payments test mode{{end}} · no real money moves</div>{{end}}
 <header class="top">
-  <a class="brand" href="/" aria-label="TopForNow home"><span class="brand-mark" aria-hidden="true"></span>TopForNow</a>
+  <a class="brand" href="/" aria-label="TopForNow home"><svg class="brand-mark" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true"><path class="bm-beam" d="M22 2h20l14 50H8z"/><path class="bm-crown" d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z"/><rect class="bm-base" x="12" y="52" width="40" height="7" rx="2"/></svg><span class="brand-word">Top<em>For</em>Now</span></a>
   <nav><a href="/history">Past tops</a><a href="/rules">Rules</a></nav>
 </header>
 <main>

@@ -7,6 +7,8 @@ One public top spot. The first post was free, once. Every replacement after that
 - `docs/launch-plan.md`: 14-day plan, venues and rules, all launch copy (Look At Me Tax)
 - `docs/operations.md`: payment design, Dodo underwriting questions, deploy, backup, rollback, going live
 - `docs/screenshots/`: browser acceptance run (phone + desktop); `docs/creative/`: campaign preview cards
+- `docs/redesign/`: "Throne Room" UI screenshots; `docs/brand/`: logo concepts (SVG) and share-card templates
+- `docs/feature-ideas.md`: prioritised next features
 
 ## Run locally
 
@@ -17,7 +19,7 @@ cp .env.example .env && set -a && . ./.env && set +a
 go run ./cmd/topfornow serve
 ```
 
-Owner view: `/admin` (password = `ADMIN_PASSWORD`).
+Owner dashboard: `/admin`. Sign in with `ADMIN_USERNAME` (default `owner`) and `ADMIN_PASSWORD`. It shows money collected, refunds, estimated Dodo fees and net per day / 7 days / 30 days / all time (days grouped in `OWNER_TZ`, default Asia/Kolkata), plus payments, posts, moderation, traffic and reconciliation. Test money is labelled and never mixed into live numbers.
 
 ## Tests
 

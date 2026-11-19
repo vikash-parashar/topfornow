@@ -1,0 +1,43 @@
+<!doctype html><meta charset=utf-8><style>
+*{box-sizing:border-box}body{margin:0;background:#0c0a09;color:#fff6e0;font:15px/1.4 system-ui,sans-serif;padding:36px}
+h1{font:900 40px/1 "Arial Black",Impact,system-ui;letter-spacing:-.04em;margin:0 0 6px}h1 em{font-style:normal;color:#ffb703}.sub{color:#ab9b88;margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.cap{margin:10px 0 0;font-weight:800}.cap small{display:block;font-weight:400;color:#ab9b88}
+.c{position:relative;aspect-ratio:4/5;border-radius:20px;overflow:hidden;padding:26px;display:flex;flex-direction:column}
+.D{font:900 1em/1 "Arial Black",Impact,system-ui;letter-spacing:-.04em}
+.stamp{position:absolute;top:14px;right:-38px;transform:rotate(35deg);background:#ffb703;color:#0c0a09;font:900 11px/1 system-ui;letter-spacing:.12em;padding:6px 44px}
+.sig{margin-top:auto;display:flex;align-items:center;gap:8px;font:900 20px/1 "Arial Black",Impact,system-ui;letter-spacing:-.03em}.sig em{font-style:normal;color:#ffb703}
+.sig svg{width:28px;height:28px}
+/* 1 receipt */
+.r{background:#fff6e0;color:#0c0a09;background-image:repeating-linear-gradient(0deg,transparent 0 27px,#0c0a0912 27px 28px)}
+.r .t{font:800 13px/1 ui-monospace,monospace;letter-spacing:.3em;text-transform:uppercase;border-bottom:2px dashed #0c0a09;padding-bottom:10px}
+.r .s{font-size:44px;margin:22px 0 14px}.r .l{font:13px/1.8 ui-monospace,monospace;border-top:2px dashed #0c0a09;padding-top:10px}.r .sig{color:#0c0a09}
+/* 2 dethroned */
+.d{background:radial-gradient(400px 300px at 70% 0,#e84a2755,transparent),#17120f;border:1px solid #3a2e25}
+.d .k{color:#e84a27;font:900 14px/1 system-ui;letter-spacing:.25em}.d .s{font-size:40px;margin:16px 0}.d .s span{color:#ffd166}
+.d .x{display:inline-block;border:3px solid #e84a27;color:#e84a27;padding:6px 12px;transform:rotate(-8deg);font-size:22px;margin:4px 0 0}
+/* 3 price alert */
+.p{background:linear-gradient(180deg,#ffd166,#ffb703 60%,#e8960a);color:#0c0a09}
+.p .k{font:900 13px/1 system-ui;letter-spacing:.25em}.p .s{font-size:100px;margin:18px 0 0;line-height:.9}.p .n{font-size:26px;margin:10px 0}
+.p .x2{position:absolute;right:26px;top:96px;background:#ff2e63;color:#fff;font-size:28px;padding:6px 12px;border-radius:12px;transform:rotate(12deg)}
+/* 4 verdict */
+.v{background:#3b2a8c;background:linear-gradient(160deg,#7c5cff,#3b2a8c)}
+.v .q{font-size:32px;margin:6px 0 18px}.v .bar{height:18px;border-radius:9px;background:#e84a27;overflow:hidden}.v .bar i{display:block;height:100%;width:68%;background:#3ddc84}
+.v .pc{display:flex;justify-content:space-between;font:900 22px/1 system-ui;margin-top:10px}
+/* 5 founder */
+.f{background:radial-gradient(420px 320px at 50% 30%,#ffb70326,transparent),#0c0a09;border:2px solid #ffb703}
+.f .s{font-size:46px;margin:40px 0 10px}.f .k{color:#ffb703;font:900 13px/1 system-ui;letter-spacing:.25em}
+/* 6 story */
+.st{aspect-ratio:9/16;background:#0c0a09;background-image:conic-gradient(from 200deg at 50% -10%,transparent 0 40deg,#ffb70355 50deg,transparent 60deg 300deg,#ff2e6333 310deg,transparent 320deg)}
+.st .s{font-size:36px;margin:auto 0 10px}.st .k{color:#ab9b88;font:700 14px/1.4 system-ui}
+.wrap6{grid-row:span 2}
+</style>
+<h1>Top<em>For</em>Now · share-card templates</h1>
+<p class="sub">Every card is rendered by the server with the post's real numbers. Mock values below; cards that look like a purchase carry a PREVIEW band.</p>
+<div class="grid">
+<div><div class="c r"><div class="stamp">PREVIEW</div><div class="t">Ego Receipt</div><div class="s D">I paid $16 to make you read this. It worked.</div><div class="l">ROUND 05 ............ $16.00<br>TIME ON TOP ......... 3h 12m<br>VOTES ............... 412</div><div class="sig"><svg viewBox="0 0 64 64"><path d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z" fill="#ffb703"/><rect x="12" y="52" width="40" height="7" rx="2" fill="#e84a27"/></svg><span>Top<em>For</em>Now</span></div></div><p class="cap">1 · Ego Receipt (live)<small>For buyers. The exact $16 sentence, only the amount changes per tier.</small></p></div>
+<div><div class="c d"><div class="stamp">PREVIEW</div><div class="k">DETHRONED</div><div class="s D">I ruled the internet for <span>3h 12m</span>.</div><div class="x D">Someone paid $32 to replace me</div><div class="sig"><svg viewBox="0 0 64 64"><path d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z" fill="#ffb703"/><rect x="12" y="52" width="40" height="7" rx="2" fill="#e84a27"/></svg><span>Top<em>For</em>Now</span></div></div><p class="cap">2 · Dethroned card<small>Sent when you are replaced. Turns losing into a flex, brings you back.</small></p></div>
+<div><div class="c p"><div class="k">NEXT PRICE TO TAKE THE SPOT</div><div class="s D">$128</div><div class="x2 D">×2</div><div class="n D">Then $256. Then $512.</div><div class="sig"><svg viewBox="0 0 64 64"><path d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z" fill="#0c0a09"/><rect x="12" y="52" width="40" height="7" rx="2" fill="#e84a27"/></svg><span>Top<em style="color:#fff6e0">For</em>Now</span></div></div><p class="cap">3 · Price alert<small>For our own socials and RSS: "the spot is now $128". Drives curiosity.</small></p></div>
+<div><div class="c v"><div style="font:900 13px/1 system-ui;letter-spacing:.25em;color:#d9ceff">THE INTERNET VOTED</div><div class="q D">“Dark mode is a personality, not a setting”</div><div class="bar"><i></i></div><div class="pc"><span>68% Agree</span><span>32% Disagree</span></div><div class="sig"><svg viewBox="0 0 64 64"><path d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z" fill="#ffd166"/><rect x="12" y="52" width="40" height="7" rx="2" fill="#e84a27"/></svg><span>Top<em>For</em>Now</span></div></div><p class="cap">4 · Verdict card<small>For voters, free. Shares the result, not the purchase.</small></p></div>
+<div><div class="c f"><div class="k">ROUND 0 · FOUNDING POST</div><div class="s D">I took the first spotlight for free.</div><div style="color:#ab9b88">Everyone after me pays double.</div><div class="sig"><svg viewBox="0 0 64 64"><path d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z" fill="#ffb703"/><rect x="12" y="52" width="40" height="7" rx="2" fill="#e84a27"/></svg><span>Top<em>For</em>Now</span></div></div><p class="cap">5 · Founder card<small>The one-time free post, with the exact free share line.</small></p></div>
+<div><div class="c st"><div class="stamp">PREVIEW</div><div class="k">LOOK AT ME TAX · STORY</div><div class="s D">I paid $16 to make you read this. It worked.</div><div class="k">topfornow · the one spot on the internet</div><div class="sig"><svg viewBox="0 0 64 64"><path d="M14 50 L17 30 L26 39 L32 24 L38 39 L47 30 L50 50 Z" fill="#ffb703"/><rect x="12" y="52" width="40" height="7" rx="2" fill="#e84a27"/></svg><span>Top<em>For</em>Now</span></div></div><p class="cap">6 · Story (9:16)<small>Instagram / WhatsApp status version of the Look At Me Tax ad.</small></p></div>
+</div>

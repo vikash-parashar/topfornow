@@ -49,8 +49,9 @@
       .then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t); }); return r.json(); })
       .then(function (j) {
         box.dataset.mine = j.mine;
-        box.querySelector(".up .n").textContent = j.up;
-        box.querySelector(".down .n").textContent = j.down;
+        setCount(box.querySelector(".up .n"), j.up);
+        setCount(box.querySelector(".down .n"), j.down);
+        if (j.mine !== 0) burst(b, j.mine === 1 ? ["✦", "★", "▲", "✺"] : ["✕", "▼", "☁"]);
         box.querySelector(".up").classList.toggle("on", j.mine === 1);
         box.querySelector(".down").classList.toggle("on", j.mine === -1);
         var bar = box.querySelector(".bar");
@@ -139,6 +140,84 @@
         tries++; setTimeout(poll, tries < 20 ? 1500 : 5000);
       }).catch(function () { setTimeout(poll, 4000); });
     })();
+  }
+
+
+  // ---- Throne Room motion (decoration only; off under reduced motion) ----
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function setCount(el, n) {
+    if (!el) return;
+    if (String(n) !== el.textContent) { el.textContent = n; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+  }
+  function burst(from, glyphs) {
+    if (calm) return;
+    var r = from.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 14; i++) {
+      var p = document.createElement("span");
+      p.className = "burst"; p.textContent = glyphs[i % glyphs.length];
+      p.style.left = cx + "px"; p.style.top = cy + "px";
+      p.style.color = ["#ffd166", "#ff2e63", "#3ddc84", "#7c5cff", "#fff6e0"][i % 5];
+      document.body.appendChild(p);
+      var a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 70;
+      p.animate([
+        { transform: "translate(-50%,-50%) scale(.4)", opacity: 1 },
+        { transform: "translate(" + (Math.cos(a) * d - 10) + "px," + (Math.sin(a) * d - 40) + "px) scale(1.2) rotate(" + (Math.random() * 360) + "deg)", opacity: 0 }
+      ], { duration: 700 + Math.random() * 400, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = (function (el) { return function () { el.remove(); }; })(p);
+    }
+  }
+  function money(c) { return c >= 100 ? "$" + Math.round(c / 100).toLocaleString("en-US") : "$" + (c / 100).toFixed(2); }
+  // The price rolls up from the last price to the doubled one.
+  var num = document.querySelector(".ph-num[data-roll-to]");
+  if (num && !calm) {
+    var to = +num.dataset.rollTo, from = +num.dataset.rollFrom;
+    if (to >= 200) {
+      var t0 = null, dur = 1100;
+      num.textContent = money(from);
+      requestAnimationFrame(function step(t) {
+        if (!t0) t0 = t;
+        var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 4);
+        num.textContent = money(Math.round((from + (to - from) * e) / 100) * 100);
+        if (k < 1) requestAnimationFrame(step); else num.textContent = money(to);
+      });
+    }
+  }
+  if (!calm) {
+    // Spotlight follows the pointer; the top card tilts toward it.
+    var big = document.querySelector(".throne .card-big");
+    var fine = window.matchMedia("(pointer: fine)").matches;
+    if (fine) {
+      document.documentElement.classList.add("has-pointer");
+      var root = document.documentElement.style, pend = false, lx = 0, ly = 0;
+      window.addEventListener("pointermove", function (e) {
+        lx = e.clientX; ly = e.clientY;
+        if (pend) return; pend = true;
+        requestAnimationFrame(function () {
+          pend = false;
+          root.setProperty("--mx", lx + "px"); root.setProperty("--my", ly + "px");
+          if (big) {
+            var r = big.getBoundingClientRect();
+            var dx = (lx - (r.left + r.width / 2)) / r.width, dy = (ly - (r.top + r.height / 2)) / r.height;
+            if (Math.abs(dx) < 1.2 && Math.abs(dy) < 1.4) {
+              big.style.setProperty("--ry", (dx * 3).toFixed(2) + "deg"); big.style.setProperty("--rx", (-dy * 2.5).toFixed(2) + "deg");
+            } else { big.style.setProperty("--ry", "0deg"); big.style.setProperty("--rx", "0deg"); }
+          }
+        });
+      }, { passive: true });
+    }
+    // Cards rise in as they scroll into view.
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
+      }, { rootMargin: "0px 0px -8% 0px" });
+      document.querySelectorAll(".fallen .card, .stats > div, .kpi").forEach(function (el, i) {
+        el.classList.add("reveal"); el.style.transitionDelay = (i % 4) * 70 + "ms"; io.observe(el);
+      });
+    }
+    // Keep the next rung of the ladder centred on small screens.
+    var next = document.querySelector(".rung-next");
+    if (next && next.parentElement.scrollWidth > next.parentElement.clientWidth) {
+      next.parentElement.scrollLeft = next.offsetLeft - next.parentElement.clientWidth / 2 + next.clientWidth / 2;
+    }
   }
 
   // Link hint on the submit form.

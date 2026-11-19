@@ -1,9 +1,12 @@
 {{define "content"}}
-<section class="panel narrow">
+<section class="panel narrow login-card">
+  <div class="crown" aria-hidden="true"><svg viewBox="0 0 64 40" width="56" height="35"><path d="M4 36 L8 10 L22 24 L32 4 L42 24 L56 10 L60 36 Z" fill="currentColor"/></svg></div>
   <h1>Owner sign in</h1>
-  {{if .Data}}<p class="error">{{.Data}}</p>{{end}}
+  <p class="sub">Your money, your throne, your rules.</p>
+  {{if .Data}}<p class="error" role="alert">{{.Data}}</p>{{end}}
   <form method="post" action="/admin/login" class="form">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <label>Username <input name="username" required autocomplete="username" autocapitalize="none" spellcheck="false"></label>
     <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
     <button class="btn buybtn">Sign in</button>
   </form>

@@ -1,7 +1,7 @@
 {{define "content"}}
 <section class="past">
-  <h1>Every past top post</h1>
+  <h1>Hall of the dethroned</h1>
   <p class="muted">Newest first. Each one still has its page, votes and results.</p>
-  <div class="grid">{{range .Data}}{{template "card" .}}{{else}}<p>No post has been replaced yet.</p>{{end}}</div>
+  <div class="grid fallen">{{range .Data}}{{template "card" .}}{{else}}<p>No post has been replaced yet.</p>{{end}}</div>
 </section>
 {{end}}

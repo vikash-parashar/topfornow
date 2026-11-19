@@ -39,7 +39,20 @@ func (s *Server) isAdmin(r *http.Request) bool {
 	if err != nil || time.Now().Unix() > exp {
 		return false
 	}
-	return subtle.ConstantTimeCompare([]byte(parts[1]), []byte(s.sign("admin:"+parts[0]+":"+s.AdminPassword))) == 1
+	return subtle.ConstantTimeCompare([]byte(parts[1]), []byte(s.adminSig(parts[0]))) == 1
+}
+
+// adminSig binds the session to the expiry, the username and the password, so
+// changing ADMIN_PASSWORD or ADMIN_USERNAME signs every owner out.
+func (s *Server) adminSig(exp string) string {
+	return s.sign("admin:" + exp + ":" + s.adminUser() + ":" + s.AdminPassword)
+}
+
+func (s *Server) adminUser() string {
+	if s.AdminUser == "" {
+		return "owner"
+	}
+	return s.AdminUser
 }
 
 func (s *Server) adminOnly(h http.HandlerFunc) http.HandlerFunc {
@@ -67,14 +80,15 @@ func (s *Server) adminLoginForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) adminLogin(w http.ResponseWriter, r *http.Request) {
-	if !s.checkCSRF(r) || s.AdminPassword == "" ||
-		subtle.ConstantTimeCompare([]byte(r.FormValue("password")), []byte(s.AdminPassword)) != 1 {
+	userOK := subtle.ConstantTimeCompare([]byte(strings.TrimSpace(r.FormValue("username"))), []byte(s.adminUser())) == 1
+	passOK := subtle.ConstantTimeCompare([]byte(r.FormValue("password")), []byte(s.AdminPassword)) == 1
+	if !s.checkCSRF(r) || s.AdminPassword == "" || !userOK || !passOK {
 		time.Sleep(700 * time.Millisecond)
-		s.render(w, r, "admin_login", 401, Page{Title: "Owner sign in · TopForNow", NoIndex: true, Data: "Wrong password."})
+		s.render(w, r, "admin_login", 401, Page{Title: "Owner sign in · TopForNow", NoIndex: true, Data: "Wrong username or password."})
 		return
 	}
 	exp := strconv.FormatInt(time.Now().Add(12*time.Hour).Unix(), 10)
-	http.SetCookie(w, &http.Cookie{Name: adminCookie, Value: exp + "." + s.sign("admin:"+exp+":"+s.AdminPassword), Path: "/admin",
+	http.SetCookie(w, &http.Cookie{Name: adminCookie, Value: exp + "." + s.adminSig(exp), Path: "/admin",
 		HttpOnly: true, Secure: strings.HasPrefix(s.BaseURL, "https://"), SameSite: http.SameSiteStrictMode, MaxAge: 12 * 3600})
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
@@ -94,6 +108,7 @@ type adminData struct {
 	Week     *core.Traffic
 	Funnel   []core.FunnelRow
 	Recent   []*core.Post
+	Money    *core.Revenue
 	Flash    string
 }
 
@@ -109,6 +124,10 @@ func (s *Server) adminDash(w http.ResponseWriter, r *http.Request) {
 	d.Week, _ = s.Svc.TrafficSince(ctx, time.Now().Add(-7*24*time.Hour))
 	d.Funnel, _ = s.Svc.Funnel(ctx, time.Now().Add(-30*24*time.Hour))
 	d.Recent, _ = s.Svc.ListPosts(ctx, "", 30)
+	var err error
+	if d.Money, err = s.Svc.RevenueReport(ctx, s.OwnerTZ, !s.IsLive()); err != nil {
+		s.Log.Error("revenue report", "err", err)
+	}
 	s.render(w, r, "admin", 200, Page{Title: "Owner · TopForNow", NoIndex: true, Data: d})
 }
 

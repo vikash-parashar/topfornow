@@ -2,11 +2,49 @@
 {{$d := .Data}}{{$csrf := .CSRF}}
 <section class="panel admin">
   <div class="admin-head">
-    <h1>Owner view</h1>
+    <h1>Owner dashboard</h1>
     <form method="post" action="/admin/logout"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="linkbtn">Sign out</button></form>
   </div>
   <p>Mode: <strong class="mono">{{.Mode}}</strong>{{if not .Live}} (test data is labelled and can be purged){{end}} · Rounds: {{$d.State.RoundsPublished}} · Next price: {{usd $d.State.NextPriceCents}}{{if $d.State.ActiveHold}} · Hold active until {{$d.State.ActiveHold.ExpiresAt.UTC.Format "15:04:05 UTC"}}{{end}}</p>
   {{if $d.Flash}}<p class="ok">{{$d.Flash}}</p>{{end}}
+
+  {{with $d.Money}}
+  <div class="money-hero">
+    <span class="mh-k">Estimated net earnings · all time{{if .IncludesTest}} · TEST MONEY{{end}}</span>
+    <span class="mh-v">{{usd (pos .All.NetCents)}}</span>
+    <p class="mh-sub">From {{usd .All.GrossCents}} collected in {{.All.Payments}} payments, after refunds and estimated Dodo fees. Today so far: <strong>{{usd (pos .Today.NetCents)}}</strong> net.{{if .IncludesTest}} No real money: this is {{$.Mode}} mode.{{end}}</p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span class="k">Collected today</span><span class="v">{{usd .Today.GrossCents}}</span><span class="s">{{.Today.Payments}} payments</span></div>
+    <div class="kpi"><span class="k">Last 7 days</span><span class="v">{{usd .Week.GrossCents}}</span><span class="s">net {{usd (pos .Week.NetCents)}}</span></div>
+    <div class="kpi"><span class="k">Last 30 days</span><span class="v">{{usd .Month.GrossCents}}</span><span class="s">net {{usd (pos .Month.NetCents)}}</span></div>
+    <div class="kpi"><span class="k">Biggest sale</span><span class="v">{{usd .All.BiggestCents}}</span><span class="s">avg {{usd .All.AvgCents}}</span></div>
+    <div class="kpi bad"><span class="k">Refunded</span><span class="v">{{usd .All.RefundCents}}</span><span class="s">{{.All.RefundCount}} refunds</span></div>
+    <div class="kpi"><span class="k">Est. fees</span><span class="v">{{usd .All.FeeCents}}</span><span class="s">up to {{usd .All.FeeMaxCents}} if cards are international</span></div>
+    <div class="kpi {{if .All.Disputes}}bad{{end}}"><span class="k">Disputes</span><span class="v">{{.All.Disputes}}</span><span class="s">$30 fee each</span></div>
+    <div class="kpi good"><span class="k">Checkout → paid (30d)</span><span class="v">{{.ConversionPct}}%</span><span class="s">{{.PaidPosts30d}} of {{.CheckoutsStarted30d}} started</span></div>
+  </div>
+  <h2>Money per day <small class="muted">last 30 days, {{.Location}}</small></h2>
+  <p class="legend"><span><i class="lg"></i>Collected</span><span><i class="ln"></i>Net (est.)</span></p>
+  <svg class="chart" viewBox="0 0 310 104" role="img" aria-label="Collected and net money per day for the last 30 days">
+    <line class="axis" x1="4" y1="90.5" x2="306" y2="90.5"/>
+    {{$max := .MaxDayCents}}
+    {{range $i, $p := .Days}}{{$h := barH $p.GrossCents $max}}{{$n := barH (pos $p.NetCents) $max}}
+      {{if $h}}<rect class="bar-g" x="{{barX $i}}" y="{{barY $h}}" width="4" height="{{$h}}" rx="1"><title>{{$p.Day.Format "2 Jan"}}: {{usd $p.GrossCents}} collected, {{$p.Payments}} payments</title></rect>{{else}}<rect class="bar-z" x="{{barX $i}}" y="89" width="4" height="1"/>{{end}}
+      {{if $n}}<rect class="bar-n" x="{{barX $i}}" y="{{barY $n}}" width="4" height="{{$n}}" rx="1" transform="translate(4 0)"><title>{{$p.Day.Format "2 Jan"}}: {{usd $p.NetCents}} net</title></rect>{{end}}
+      {{if or (eq $i 0) (eq $i 29)}}<text x="{{barX $i}}" y="101">{{$p.Day.Format "2 Jan"}}</text>{{end}}
+    {{end}}
+  </svg>
+  <div class="scroll"><table class="periods">
+    <tr><th></th><th>Today</th><th>7 days</th><th>30 days</th><th>All time</th></tr>
+    <tr><td>Collected</td><td>{{usd .Today.GrossCents}}</td><td>{{usd .Week.GrossCents}}</td><td>{{usd .Month.GrossCents}}</td><td>{{usd .All.GrossCents}}</td></tr>
+    <tr><td>Refunded</td><td>−{{usd .Today.RefundCents}}</td><td>−{{usd .Week.RefundCents}}</td><td>−{{usd .Month.RefundCents}}</td><td>−{{usd .All.RefundCents}}</td></tr>
+    <tr><td>Est. Dodo fees (4% + 40¢, $1/refund, $30/dispute)</td><td>−{{usd .Today.FeeCents}}</td><td>−{{usd .Week.FeeCents}}</td><td>−{{usd .Month.FeeCents}}</td><td>−{{usd .All.FeeCents}}</td></tr>
+    <tr class="net"><td>Net (estimate)</td><td>{{usd (pos .Today.NetCents)}}</td><td>{{usd (pos .Week.NetCents)}}</td><td>{{usd (pos .Month.NetCents)}}</td><td>{{usd (pos .All.NetCents)}}</td></tr>
+    <tr><td>Net if all cards are international (+1.5%)</td><td>{{usd (pos .Today.NetMinCents)}}</td><td>{{usd (pos .Week.NetMinCents)}}</td><td>{{usd (pos .Month.NetMinCents)}}</td><td>{{usd (pos .All.NetMinCents)}}</td></tr>
+  </table></div>
+  <p class="muted small">Estimates use Dodo's public pricing. Your Dodo dashboard payout report is the final number. Payouts start at $50; a USD SWIFT payout to an Indian bank costs about $25.</p>
+  {{end}}
 
   <h2>Payment reconciliation</h2>
   {{with $d.Recon}}

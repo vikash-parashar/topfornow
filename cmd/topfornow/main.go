@@ -6,6 +6,7 @@
 package main
 
 import (
+	_ "time/tzdata" // owner time zone works in the distroless image
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -80,7 +81,7 @@ func run(cmd string, log *slog.Logger) error {
 	cfg := core.Config{HoldDuration: 15 * time.Minute, MaxCheckoutCents: maxCents, IsTest: mode != pay.ModeDodoLive, BaseURL: baseURL}
 	httpc := &http.Client{Timeout: 15 * time.Second}
 
-	srv := &web.Server{Mode: mode, Secret: []byte(secret), AdminPassword: os.Getenv("ADMIN_PASSWORD"), BaseURL: baseURL,
+	srv := &web.Server{Mode: mode, Secret: []byte(secret), AdminPassword: os.Getenv("ADMIN_PASSWORD"), AdminUser: env("ADMIN_USERNAME", "owner"), OwnerTZ: ownerTZ(), BaseURL: baseURL,
 		TrustProxy: env("TRUST_PROXY", "false") == "true", Log: log}
 	var provider core.Provider
 	switch mode {
@@ -146,4 +147,12 @@ func run(cmd string, log *slog.Logger) error {
 		return err
 	}
 	return nil
+}
+
+// ownerTZ is the time zone the owner dashboard groups days by (default India).
+func ownerTZ() *time.Location {
+	if loc, err := time.LoadLocation(env("OWNER_TZ", "Asia/Kolkata")); err == nil {
+		return loc
+	}
+	return time.UTC
 }

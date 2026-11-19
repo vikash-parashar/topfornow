@@ -113,6 +113,7 @@ async function buy(page, kind, headline, link, author, shot) {
   log("7. Admin");
   await d.goto(base + "/admin");
   assert(d.url().includes("/admin/login"), "admin redirects to login");
+  await d.fill("input[name=username]", "owner");
   await d.fill("input[name=password]", process.env.ADMIN_PASSWORD || "admin-pass-123");
   await d.click("button:has-text('Sign in')");
   await d.waitForURL(/\/admin$/);

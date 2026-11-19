@@ -48,7 +48,7 @@ Test data removal: admin "Purge test data" (sandbox/test only) or `topfornow pur
 
 ## Environment secrets (never in git)
 
-`DATABASE_URL`, `APP_SECRET` (≥32 chars, signs cookies), `ADMIN_PASSWORD`, `BASE_URL`, `PAYMENT_MODE`, `TRUST_PROXY=true` behind Fly; Dodo modes add `DODO_API_KEY`, `DODO_PRODUCT_ID`, `DODO_WEBHOOK_SECRET`; `MAX_CHECKOUT_CENTS`.
+`DATABASE_URL`, `APP_SECRET` (≥32 chars, signs cookies), `ADMIN_USERNAME` (default `owner`), `ADMIN_PASSWORD`, `OWNER_TZ` (default `Asia/Kolkata`), `BASE_URL`, `PAYMENT_MODE`, `TRUST_PROXY=true` behind Fly; Dodo modes add `DODO_API_KEY`, `DODO_PRODUCT_ID`, `DODO_WEBHOOK_SECRET`; `MAX_CHECKOUT_CENTS`.
 
 ## Deploy on Render free + Neon free (chosen, $0)
 

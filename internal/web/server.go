@@ -45,6 +45,8 @@ type Server struct {
 	WebhookSecret string
 	Secret        []byte
 	AdminPassword string
+	AdminUser     string
+	OwnerTZ       *time.Location
 	BaseURL       string
 	TrustProxy    bool
 	Log           *slog.Logger
@@ -152,6 +154,22 @@ var funcs = template.FuncMap{
 		return a * 100 / (a + b)
 	},
 	"deref": func(i *int) int { if i == nil { return -1 }; return *i },
+	"ladder": priceLadder,
+	"barH": func(c, max int64) int64 {
+		if max <= 0 || c <= 0 {
+			return 0
+		}
+		h := c * 80 / max
+		if h < 2 {
+			h = 2
+		}
+		return h
+	},
+	"barY": func(h int64) int64 { return 90 - h },
+	"barX": func(i int) int { return 6 + i*10 },
+	"neg":  func(c int64) int64 { return -c },
+	"pos":  func(c int64) int64 { if c < 0 { return 0 }; return c },
+	"half":   func(c int64) int64 { return c / 2 },
 	"double": func(c int64) int64 { if c == 0 { return 100 }; return c * 2 },
 	"add":    func(a, b int) int { return a + b },
 }
@@ -441,4 +459,34 @@ func (s *Server) health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintf(w, "ok mode=%s\n", s.Mode)
+}
+
+// Rung is one step of the doubling price ladder on the homepage.
+type Rung struct {
+	Round int
+	Cents int64
+	State string // taken, next, future
+}
+
+// priceLadder shows the last few taken rounds, the next price and what comes after.
+func priceLadder(published int) []Rung {
+	var out []Rung
+	start := published - 3
+	if start < 0 {
+		start = 0
+	}
+	for r := start; r <= published+5; r++ {
+		c, err := core.PriceForRound(r)
+		if err != nil {
+			break
+		}
+		st := "future"
+		if r < published {
+			st = "taken"
+		} else if r == published {
+			st = "next"
+		}
+		out = append(out, Rung{Round: r, Cents: c, State: st})
+	}
+	return out
 }

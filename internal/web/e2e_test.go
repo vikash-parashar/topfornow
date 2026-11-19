@@ -402,12 +402,36 @@ func TestAcceptance(t *testing.T) {
 	if r, _ := anon.do("GET", "/admin", nil); r.StatusCode != 303 {
 		t.Fatalf("admin not protected: %d", r.StatusCode)
 	}
-	if r, _ := anon.do("POST", "/admin/login", url.Values{"csrf": {anon.csrf()}, "password": {"wrong"}}); r.StatusCode != 401 {
+	if r, _ := anon.do("POST", "/admin/login", url.Values{"csrf": {anon.csrf()}, "username": {"owner"}, "password": {"wrong"}}); r.StatusCode != 401 {
 		t.Fatal("wrong password accepted")
 	}
+	if r, _ := anon.do("POST", "/admin/login", url.Values{"csrf": {anon.csrf()}, "username": {"intruder"}, "password": {"owner-pw"}}); r.StatusCode != 401 {
+		t.Fatal("wrong username accepted")
+	}
 	anon.c.CheckRedirect = nil
-	if _, body := anon.do("POST", "/admin/login", url.Values{"csrf": {anon.csrf()}, "password": {"owner-pw"}}); !strings.Contains(body, "All invariants hold") {
+	_, body := anon.do("POST", "/admin/login", url.Values{"csrf": {anon.csrf()}, "username": {"owner"}, "password": {"owner-pw"}})
+	if !strings.Contains(body, "All invariants hold") {
 		t.Fatal("admin dashboard / reconciliation not clean")
+	}
+	// Owner money view: $63 published + $4 collected then refunded = $67 collected, $4 refunded.
+	for _, want := range []string{"Owner dashboard", "Estimated net earnings", "TEST MONEY", "$67", "−$4"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("owner dashboard missing %q", want)
+		}
+	}
+	rev, err := srv.Svc.RevenueReport(ctx, nil, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rev.All.GrossCents != 6700 || rev.All.RefundCents != 400 || rev.Today.GrossCents != 6700 || len(rev.Days) != 30 {
+		t.Fatalf("revenue wrong: %+v days=%d", rev.All, len(rev.Days))
+	}
+	// Estimated fees are 4% of collected money plus 40 cents per captured payment.
+	if want := int64(rev.All.Payments)*40 + 6700*4/100; rev.All.FeeCents != want {
+		t.Fatalf("fees %d want %d", rev.All.FeeCents, want)
+	}
+	if live, _ := srv.Svc.RevenueReport(ctx, nil, false); live.All.GrossCents != 0 {
+		t.Fatal("test money leaked into the live revenue view")
 	}
 
 	// 12. Ledger consistency.
